@@ -120,7 +120,7 @@ if ($result) {
     </div>
 
     <audio id="bg-music" loop>
-        <source src="assets/music/multo.mp3" type="audio/mpeg">
+        <source src="assets/music/Intoyouxbye.mp3" type="audio/mpeg">
     </audio>
 
     <div id="intro-screen">
@@ -381,21 +381,6 @@ if ($result) {
                                 penyiaran."</p>
                         </div>
                     </div>
-                    <div class="mt-24 pt-16 border-t border-red-900/30">
-                        <div class="text-center mb-16">
-                            <h2
-                                class="text-3xl md:text-5xl font-tech font-bold text-white mb-3 uppercase tracking-wider">
-                                Timeline <span class="text-red-500">Proker</span></h2>
-                            <div
-                                class="h-1 w-24 bg-red-600 mx-auto rounded-full mb-4 shadow-[0_0_10px_rgba(220,38,38,0.8)]">
-                            </div>
-                            <p class="text-gray-400 text-sm md:text-base">Perjalanan program kerja utama HMPS KPI 2026 -
-                                The Golden Era.</p>
-                        </div>
-
-                        <div class="max-w-4xl mx-auto px-4 md:px-8" id="proker-timeline">
-                        </div>
-                    </div>
             </section>
 
             <section id="structure" class="hidden-section py-10">
@@ -624,6 +609,7 @@ if ($result) {
                 <div id="event-folders-grid" class="grid grid-cols-1 md:grid-cols-2 gap-6 max-w-4xl mx-auto px-4"></div>
                 <div id="documentation-grid" class="hidden columns-1 md:columns-2 lg:columns-3 gap-6 space-y-6"></div>
             </section>
+
             <section id="pendaftaran" class="hidden-section py-10">
                 <div class="text-center mb-12">
                     <h2 class="text-3xl md:text-5xl font-tech font-bold text-white mb-2">PORTAL <span
@@ -800,9 +786,10 @@ if ($result) {
         </div>
     </div>
 
+    <!-- MODAL UPLOAD ADMIN (LANDSCAPE & FIXED HEIGHT) -->
     <div id="upload-modal" class="custom-modal p-4 sm:p-8 z-[9999]" onclick="closeUploadModal(event)">
         <div id="upload-content"
-            class="w-full max-w-5xl max-h-[90vh] bg-[#0a0000]/95 backdrop-blur-xl border border-red-500/30 rounded-2xl shadow-[0_0_40px_rgba(0,0,0,0.8)] flex flex-col relative transform scale-95 transition-all duration-300"
+            class="w-full max-w-5xl h-[85vh] md:h-[80vh] bg-[#0a0000]/95 backdrop-blur-xl border border-red-500/30 rounded-2xl shadow-[0_0_40px_rgba(0,0,0,0.8)] flex flex-col relative transform scale-95 transition-all duration-300"
             onclick="event.stopPropagation()">
 
             <button onclick="closeUploadModal(null, true)"
@@ -892,7 +879,7 @@ if ($result) {
                 </div>
 
                 <div
-                    class="w-full md:w-1/2 flex flex-col bg-black/40 border-t md:border-t-0 md:border-l border-gray-800/80 min-h-[400px] md:min-h-0">
+                    class="w-full md:w-1/2 flex flex-col bg-black/40 border-t md:border-t-0 md:border-l border-gray-800/80 min-h-[300px] md:min-h-0">
                     <div class="shrink-0 p-6 md:p-8 pb-4">
                         <h3
                             class="text-gray-400 text-[10px] uppercase font-bold tracking-widest flex items-center gap-2">
@@ -975,11 +962,12 @@ if ($result) {
         </div>
     </div>
 
+    <!-- MODAL DAFTAR (DI-FIX SCROLLABLE & KOTAK KRS LEBIH RAPI) -->
     <div id="daftar-modal" class="custom-modal" style="z-index:9999;">
         <div
-            class="glass-panel w-[90%] max-w-lg p-6 md:p-8 rounded-2xl border border-red-500/40 shadow-2xl relative transform scale-95 transition-all duration-300">
+            class="glass-panel w-[90%] max-w-lg p-6 md:p-8 rounded-2xl border border-red-500/40 shadow-2xl relative transform scale-95 transition-all duration-300 max-h-[90vh] overflow-y-auto custom-scrollbar">
             <button onclick="closeDaftarModal()"
-                class="absolute top-4 right-4 text-gray-500 hover:text-red-500 transition-colors w-8 h-8 rounded-full bg-black/50 flex items-center justify-center">
+                class="absolute top-4 right-4 text-gray-500 hover:text-red-500 transition-colors w-8 h-8 rounded-full bg-black/50 flex items-center justify-center z-50">
                 <i class="fas fa-times"></i>
             </button>
 
@@ -996,16 +984,17 @@ if ($result) {
 
                 <div id="dynamic-inputs-container" class="space-y-4 flex flex-wrap"></div>
 
-                <div id="file-upload-section">
+                <!-- Area File Upload yang lebih slim -->
+                <div id="file-upload-section" class="w-full md:w-[48%] md:mr-[2%] mb-4">
                     <label id="dynamic-file-label"
                         class="block text-gray-400 text-[10px] font-bold mb-1 uppercase tracking-widest">Upload
                         File</label>
                     <div
-                        class="border-2 border-dashed border-gray-700 rounded-xl p-4 text-center hover:border-red-500 transition-colors bg-black/20 cursor-pointer relative">
+                        class="border-2 border-dashed border-gray-700 rounded-xl px-4 py-3 flex items-center justify-center gap-2 hover:border-red-500 transition-colors bg-black/20 cursor-pointer relative">
                         <input type="file" id="input-file"
                             class="absolute inset-0 w-full h-full opacity-0 cursor-pointer">
-                        <i class="fas fa-cloud-upload-alt text-2xl text-gray-500 mb-1"></i>
-                        <p class="text-xs text-gray-400" id="file-name-display">Klik untuk memilih file</p>
+                        <i class="fas fa-cloud-upload-alt text-lg text-gray-500"></i>
+                        <p class="text-[10px] text-gray-400 truncate w-full" id="file-name-display">Pilih file...</p>
                     </div>
                 </div>
 
