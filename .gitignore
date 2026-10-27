@@ -1,0 +1,16 @@
+db.php
+.env
+
+assets/mubes/*
+assets/osmajur/*
+assets/lainnya/*
+assets/poster/*
+assets/mahasiswa/*
+assets/berita/*
+assets/music/*
+assets/dokumen/*
+
+!assets/mubes/.gitkeep
+!assets/osmajur/.gitkeep
+!assets/lainnya/.gitkeep
+!assets/poster/.gitkeep

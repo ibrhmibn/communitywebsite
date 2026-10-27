@@ -1,0 +1,183 @@
+/* ==========================================
+   BASE
+   ========================================== */
+body {
+    background-color: #0a0000;
+    color: #e5e5e5;
+    overflow-x: hidden;
+    scroll-behavior: smooth;
+    -webkit-font-smoothing: antialiased;
+    -webkit-user-select: none;
+    -ms-user-select: none;
+    user-select: none;
+}
+
+html { scroll-behavior: smooth; }
+
+::-webkit-scrollbar { width: 8px; }
+::-webkit-scrollbar-track { background: #1a0505; }
+::-webkit-scrollbar-thumb { background: #8a0000; border-radius: 4px; }
+::-webkit-scrollbar-thumb:hover { background: #ff1f1f; }
+
+/* ==========================================
+   GLASS PANEL
+   ========================================== */
+.glass-panel {
+    background: rgba(40, 0, 0, 0.6);
+    border: 1px solid rgba(255, 50, 50, 0.1);
+    box-shadow: 0 4px 30px rgba(0, 0, 0, 0.5);
+    transform: translateZ(0);
+    -webkit-transform: translateZ(0);
+    -webkit-tap-highlight-color: transparent;
+    user-select: none;
+}
+
+@media (min-width: 768px) {
+    .glass-panel {
+        background: rgba(40, 0, 0, 0.4);
+        backdrop-filter: blur(12px);
+        -webkit-backdrop-filter: blur(12px);
+    }
+}
+
+/* ==========================================
+   INTRO SCREEN
+   ========================================== */
+#intro-screen {
+    position: fixed; top: 0; left: 0; width: 100%; height: 100%;
+    background: linear-gradient(135deg, #000000, #2b0000);
+    z-index: 9999; display: flex; justify-content: center; align-items: center;
+    flex-direction: column; transition: transform 0.8s ease-in-out, opacity 0.8s ease-in-out;
+    will-change: transform, opacity;
+}
+
+/* ==========================================
+   SECTION TRANSITIONS
+   ========================================== */
+.hidden-section { display: none; opacity: 0; transition: opacity 0.5s ease; }
+.active-section { display: block; animation: fadeIn 0.6s forwards; }
+
+@keyframes fadeIn {
+    from { opacity: 0; transform: translateY(20px); }
+    to { opacity: 1; transform: translateY(0); }
+}
+
+/* ==========================================
+   TYPING & NEON
+   ========================================== */
+.typing-cursor::after { content: '|'; animation: blink 1s infinite; }
+@keyframes blink { 0%, 100% { opacity: 1; } 50% { opacity: 0; } }
+.neon-text { text-shadow: 0 0 5px #ff0000, 0 0 10px #ff0000, 0 0 20px #8a0000; }
+
+/* ==========================================
+   TREE (struktur organisasi)
+   ========================================== */
+.tree { display: flex; justify-content: center; }
+.tree ul { padding-top: 20px; position: relative; transition: all 0.5s; display: flex; justify-content: center; pointer-events: none; }
+.tree li { float: left; text-align: center; list-style-type: none; position: relative; padding: 20px 5px 0 5px; transition: all 0.5s; }
+.tree li::before, .tree li::after { content: ''; position: absolute; top: 0; right: 50%; border-top: 2px solid #8a0000; width: 50%; height: 20px; }
+.tree li::after { right: auto; left: 50%; border-left: 2px solid #8a0000; }
+.tree li:only-child::after, .tree li:only-child::before { display: none; }
+.tree li:only-child { padding-top: 0; }
+.tree li:first-child::before, .tree li:last-child::after { border: 0 none; }
+.tree li:last-child::before { border-right: 2px solid #8a0000; border-radius: 0 5px 0 0; }
+.tree li:first-child::after { border-radius: 5px 0 0 0; }
+.tree ul ul::before { content: ''; position: absolute; top: 0; left: 50%; border-left: 2px solid #8a0000; width: 0; height: 20px; }
+.tree li > div { pointer-events: auto; }
+
+/* ==========================================
+   FULLSCREEN OVERLAY (family gallery)
+   ========================================== */
+.fullscreen-overlay {
+    position: fixed; top: 0; left: 0; width: 100%; height: 100%;
+    background: rgba(10, 0, 0, 0.95); z-index: 100; overflow-y: auto;
+    transform: scale(0.9); opacity: 0; pointer-events: none;
+    transition: transform 0.3s ease, opacity 0.3s ease; will-change: transform, opacity;
+}
+.fullscreen-overlay.open { transform: scale(1); opacity: 1; pointer-events: auto; }
+.fullscreen-overlay:focus { outline: none; }
+
+/* ==========================================
+   MODAL
+   ========================================== */
+.custom-modal {
+    position: fixed; top: 0; left: 0; width: 100%; height: 100%;
+    background: rgba(0, 0, 0, 0.9); z-index: 200; display: flex;
+    justify-content: center; align-items: center; opacity: 0;
+    pointer-events: none; transition: opacity 0.3s; will-change: opacity;
+}
+.custom-modal.active { opacity: 1; pointer-events: auto; }
+#bio-content:focus { outline: none; }
+
+/* ==========================================
+   BIO INFO ROW
+   ========================================== */
+.bio-info-row { display: flex; align-items: flex-start; gap: 1.25rem; padding: 0.5rem 0; transition: background-color 0.3s; }
+.bio-icon-box { flex-shrink: 0; width: 3rem; height: 3rem; border-radius: 50%; background: rgba(127, 29, 29, 0.2); display: flex; align-items: center; justify-content: center; color: #ef4444; font-size: 1.25rem; border: 1px solid rgba(239, 68, 68, 0.1); transition: transform 0.3s, background-color 0.3s, color 0.3s; }
+.bio-info-row:hover .bio-icon-box { background: #dc2626; color: white; transform: scale(1.1); box-shadow: 0 0 15px rgba(220, 38, 38, 0.4); }
+
+/* ==========================================
+   MUSIC PULSE
+   ========================================== */
+.music-pulse { animation: musicPulse 1.5s infinite; }
+@keyframes musicPulse {
+    0% { box-shadow: 0 0 0 0 rgba(220, 38, 38, 0.7); }
+    70% { box-shadow: 0 0 0 10px rgba(220, 38, 38, 0); }
+    100% { box-shadow: 0 0 0 0 rgba(220, 38, 38, 0); }
+}
+
+/* ==========================================
+   PLAY OVERLAY (video thumb)
+   ========================================== */
+.play-overlay {
+    position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%);
+    width: 60px; height: 60px; background: rgba(220, 38, 38, 0.85); border-radius: 50%;
+    display: flex; align-items: center; justify-content: center; color: white;
+    font-size: 24px; transition: transform 0.3s, background-color 0.3s;
+    box-shadow: 0 0 25px rgba(220, 38, 38, 0.6); z-index: 10;
+}
+.group:hover .play-overlay { background: rgba(255, 255, 255, 0.95); color: #dc2626; transform: translate(-50%, -50%) scale(1.15); }
+
+/* ==========================================
+   IMG LOADING
+   ========================================== */
+.img-loading-skeleton {
+    position: absolute; inset: 0; background-color: #1f2937;
+    animation: pulse 2s cubic-bezier(0.4, 0, 0.6, 1) infinite;
+    display: flex; align-items: center; justify-content: center; z-index: 0;
+}
+.img-loaded { opacity: 1 !important; }
+
+/* ==========================================
+   TOAST
+   ========================================== */
+.toast-msg {
+    position: fixed; top: 80px; right: 20px; background: #1a0505;
+    border: 1px solid #8a0000; color: white; padding: 12px 24px;
+    border-radius: 8px; z-index: 10000; font-size: 14px;
+    box-shadow: 0 10px 30px rgba(0, 0, 0, 0.5); animation: slideIn 0.3s ease forwards;
+}
+@keyframes slideIn {
+    from { transform: translateX(100%); opacity: 0; }
+    to { transform: translateX(0); opacity: 1; }
+}
+
+/* ==========================================
+   NEWS GRID: sembunyikan artikel ke-4 dst
+   ========================================== */
+#news-grid > div:nth-child(n+4) { display: none; }
+#news-grid.show-all > div:nth-child(n+4) {
+    display: flex;
+    animation: fadeIn 0.5s ease-in-out;
+}
+
+/* ==========================================
+   STRUCTURE (mobile safety)
+   ========================================== */
+#structure { overflow-x: hidden !important; }
+
+@media (max-width: 768px) {
+    .division-block { width: 100% !important; overflow-x: hidden !important; }
+}
+
+.md\:hidden .glass-panel { scroll-margin-top: 100px; }
