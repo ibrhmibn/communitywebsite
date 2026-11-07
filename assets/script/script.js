@@ -364,27 +364,43 @@ const newsData = [
   // ===========  LOMBA ONLINE  ========================
   //====================================================
 
-  // {
-  //    id: 3,
-  //    title: "Pendaftaran Lomba Desain Poster Nasional 2026 Resmi Dibuka!",
-  //    folderName: "Lomba Poster",
-  //    date: "14 April 2026",
-  //    category: "Kompetisi",
-  //    color: "bg-orange-600",
-  //   img: "https://placehold.co/600x400/1a0000/ff6600?text=Lomba+Poster",
-  //    excerpt: "Asah kreativitasmu dan menangkan total hadiah jutaan rupiah!...",
-  //    content: `
-  //            <p><strong>PONOROGO</strong> – Divisi Kreatif HMPS KPI 2026 resmi membuka ajang kompetisi bergengsi tingkat nasional bertajuk <strong>"National Poster Design Competition 2026"</strong>. Lomba ini merupakan wadah bagi mahasiswa di seluruh Indonesia untuk mengekspresikan gagasan dakwah melalui media visual.</p>
-  //            <p>Tema lomba tahun ini adalah <em>"Modernizing Dakwah in Digital Society"</em>. Peserta diharapkan mampu menciptakan karya yang tidak hanya estetik, tetapi juga memiliki pesan moral yang kuat sesuai dengan jati diri mahasiswa Komunikasi Islam.</p>
-  //            <p><strong>Timeline Lomba:</strong></p>
-  //            <ul>
-  //                <li>Pendaftaran: 14 April - 10 Mei 2026</li>
-  //                <li>Penjurian: 11 - 15 Mei 2026</li>
-  //                <li>Pengumuman: 17 Mei 2026</li>
-  //            </ul>
-  //            <p>Klik tombol di bawah ini untuk melihat detail syarat ketentuan dan mengisi formulir pendaftaran resmi.</p>
-  //        `,
+   {
+    id: 4, 
+    title: "Pengumpulan Karya Pameran Festival Budaya Komunikasi",
+    folderName: "Pameran FEBKOM", 
+    date: "7 - 11 November 2026",
+    category: "Kompetisi", 
+    color: "bg-orange-600",
+    img: "assets/berita/poster_pameran.webp", 
+    excerpt: "Panggilan bagi para kreator! Pajang mahakaryamu di galeri visual Festival Budaya Komunikasi (FEBKOM) dan tunjukkan perspektif budayamu.",
+    content: `
+        <p><strong>PONOROGO</strong> – Sebuah kanvas raksasa telah disiapkan. Dalam rangka menyemarakkan <strong>Festival Budaya Komunikasi (FEBKOM)</strong>, HMPS KPI 2026 membuka gerbang <strong>Open Submission Pameran Karya</strong>. Ini merupakan ruang apresiasi bagi mahasiswa untuk memamerkan karya visual terbaiknya di depan publik.</p>
+        
+        <p>Mengangkat semangat eksplorasi budaya dan komunikasi, karya yang terkumpul akan dikurasi dan <strong>dipajang secara fisik maupun digital</strong> di galeri utama selama rangkaian acara FEBKOM berlangsung. Ini adalah momen yang tepat untuk meninggalkan jejak karyamu di <em>The Golden Era</em>.</p>
+        
+        <p><strong>Ketentuan Karya:</strong></p>
+        <ul>
+            <li>Karya orisinal (bebas dari unsur plagiarisme) dengan tema budaya, komunikasi, atau dakwah kreatif.</li>
+            <li>Medium bebas: Fotografi, Poster/Desain Grafis, Ilustrasi Digital, atau Seni Media lainnya.</li>
+            <li>Wajib menyertakan <strong>Nama, Kelas, dan Deskripsi/Narasi</strong> di balik karya.</li>
+            <li>Resolusi tinggi (minimal 2000px) untuk kualitas cetak pameran.</li>
+            <li>Ukuran file maksimal 10MB. Jika lebih, wajib menyertakan link Google Drive tambahan.</li>
+        </ul>
+        <p><strong>Pajang karyamu, inspirasi banyak orang, dan jadilah bagian dari galeri FEBKOM!</strong></p>
+    `,
     
+        formFields: [
+        { id: "nama", label: "Nama Lengkap Kreator", type: "text", placeholder: "Nama lengkap...", halfWidth: false },
+        { id: "kelas", label: "Kelas", type: "text", placeholder: "Contoh: KPI A / KPI B...", halfWidth: true },
+        { id: "wa", label: "Nomor WhatsApp", type: "tel", placeholder: "0812...", halfWidth: true },
+        { id: "judul_karya", label: "Judul Karya", type: "text", placeholder: "Masukkan judul karyamu...", halfWidth: false },
+        { id: "deskripsi_karya", label: "Deskripsi / Narasi Karya", type: "textarea", placeholder: "Ceritakan pesan, makna, atau filosofi di balik karyamu...", halfWidth: false },
+        { id: "link_drive", label: "Link Google Drive Tambahan (Opsional)", type: "url", placeholder: "Taruh link di sini jika file terlalu besar", halfWidth: false, isRequired: false }
+    ],
+    
+    fileLabel: "Upload File Karya (PNG/JPG/PDF)", 
+    requireFile: true 
+  },
   //    // --- TAMBAHKAN BAGIAN INI ---
   //    // Resep form dinamis khusus untuk lomba ini
   //    formFields: [
@@ -1702,8 +1718,9 @@ function openDaftarModal(folderName) {
                     <textarea id="dyn_${field.id}" data-label="${field.label}" required placeholder="${field.placeholder}" rows="3" class="dyn-input w-full bg-black/50 border border-gray-700 rounded-xl px-4 py-3 text-white text-sm focus:border-red-500 outline-none transition-all placeholder:text-gray-600 resize-none"></textarea>`;
             } else {
                 // Render Input biasa (text, tel, dll)
+                const requiredAttr = field.isRequired === false ? '' : 'required'; // Cek apakah wajib diisi
                 inputElement = `
-                    <input type="${field.type}" id="dyn_${field.id}" data-label="${field.label}" required placeholder="${field.placeholder}" class="dyn-input w-full bg-black/50 border border-gray-700 rounded-xl px-4 py-3 text-white text-sm focus:border-red-500 outline-none transition-all placeholder:text-gray-600">`;
+                    <input type="${field.type}" id="dyn_${field.id}" data-label="${field.label}" ${requiredAttr} placeholder="${field.placeholder}" class="dyn-input w-full bg-black/50 border border-gray-700 rounded-xl px-4 py-3 text-white text-sm focus:border-red-500 outline-none transition-all placeholder:text-gray-600">`;
             }
 
             htmlInputs += `
