@@ -6,6 +6,17 @@ let selectedFiles = new Set();
 let currentEvent = null;
 let uploadQueue = [];
 
+// Warna badge kategori berita (gaya retro, tidak lagi pakai news.color dari data)
+const CATEGORY_STYLES = {
+    pelantikan: "bg-mustard text-ink",
+    mubes: "bg-espresso text-cream",
+    kompetisi: "bg-brick text-cream",
+};
+function getCategoryStyle(category) {
+    return CATEGORY_STYLES[(category || "").toLowerCase()] || "bg-ink text-cream";
+}
+let _mediaCardCounter = 0; // untuk kemiringan kartu galeri
+
 // allFilesData di-inject dari index.php via <script> inline
 
 const textToType = "KPI 2026";
@@ -480,21 +491,14 @@ const timelineData = [
         month: "April 2026",
         title: "Pelantikan HMPS KPI 2026/2027",
         desc: "Pelantikan resmi pengurus HMPS KPI periode 2026/2027, menandai dimulainya The Golden Era",
-        status: "upcoming", // completed = selesai (menyala) / upcoming = belum selesai (redup)
+        status: "completed",
         icon: "fa-user-tie",
-    },
-    {
-        month: "Mei 2026",
-        title: "Upgrading skill yang diadakan DEMA",
-        desc: "Pengasahan skill anggota melalui serangkaian workshop dan pelatihan yang diselenggarakan oleh DEMA",
-        status: "upcoming",
-        icon: "fa-star",
     },
     {
         month: "Mei 2026",
         title: "MUBES HMPS KPI",
         desc: "Musyawarah Besar untuk evaluasi dan perencanaan program kerja HMPS KPI ke depan",
-        status: "upcoming",
+        status: "completed",
         icon: "fa-users-cog", 
     },
     {
@@ -503,6 +507,27 @@ const timelineData = [
         desc: "Sidang untuk mengesahkan proker proker Ormawa FUAD 2026/2027",
         status: "completed",
         icon: "fa-rocket",
+    },
+    {
+        month: "September 2026",
+        title: "Pelatihan Public Speaking",
+        desc: "Pelatihan untuk meningkatkan kemampuan berbicara di depan umum bagi mahasiswa KPI",
+        status: "completed",
+        icon: "fa-microphone",
+    },
+    {
+        month: "Oktober 2026",
+        title: "Open Volunteer FEBKOM",
+        desc: "Pendaftaran relawan untuk menyukseskan acara FEBKOM 2026",
+        status: "completed",
+        icon: "fa-hands-helping",
+    },
+    {
+        month: "November 2026",
+        title: "Festival Budaya Komunikasi (FEBKOM)",
+        desc: "Acara puncak yang menampilkan pameran karya, dan pertunjukan budaya",
+        status: "upcoming",
+        icon: "fa-theater-masks",
     }
 ];
 
@@ -518,11 +543,13 @@ window.onload = function () {
 
     loadGalleryData();
     checkAdminStatus();
-    renderNewsList();   // udah manggil checkNewsCount() di dalemnya
+    renderNewsList(); 
     renderPendaftaranPortal();
     renderDivisionStructure();
     renderTimeline();
     startCountdown();
+    initScrollProgress();
+    initPlaylist();
 };
 
 // ==========================================
@@ -533,25 +560,33 @@ function renderHomePosters() {
     if (!container) return;
 
     if (typeof allFilesData === "undefined" || !Array.isArray(allFilesData)) {
-        container.innerHTML = `<div class="w-full text-center py-10"><p class="text-gray-500 text-sm italic">Data galeri belum tersedia.</p></div>`;
+        container.innerHTML = `<div class="w-full text-center py-10"><p class="text-ink/70 text-sm italic">Data galeri belum tersedia.</p></div>`;
         return;
     }
 
     const posters = allFilesData.filter((item) => item.event === "E04");
 
     if (posters.length === 0) {
-        container.innerHTML = `<div class="w-full text-center py-10"><p class="text-gray-500 text-sm italic">Belum ada poster yang diunggah.</p></div>`;
+        container.innerHTML = `<div class="w-full text-center py-10"><p class="text-ink/70 text-sm italic">Belum ada poster yang diunggah.</p></div>`;
         return;
     }
 
     let html = "";
-    posters.forEach((item) => {
+    posters.forEach((item, idx) => {
+        const tilt = idx % 2 === 0 ? "-rotate-1" : "rotate-1";
         html += `
-        <div class="w-64 md:w-80 shrink-0 snap-center group" onclick="openMediaModal('image', '${item.src}')">
-            <div class="glass-panel aspect-[4/5] rounded-xl overflow-hidden relative border border-gray-800 hover:border-red-500/50 transition-all cursor-pointer">
-                <img src="${item.src}" alt="${item.title}" loading="lazy" draggable="false" class="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500 pointer-events-none" onerror="this.src='https://placehold.co/400x500/1a0000/ff0000?text=Error';">
-                <div class="absolute bottom-0 left-0 w-full p-4 bg-gradient-to-t from-black via-black/80 to-transparent pointer-events-none">
-                    <h4 class="text-white font-bold text-sm drop-shadow-md line-clamp-2">${item.title}</h4>
+        <div class="w-64 md:w-80 shrink-0 snap-center group ${tilt} hover:rotate-0 hover:-translate-y-1 transition-transform duration-200" onclick="openMediaModal('image', '${item.src}')">
+            <div class="rt-card aspect-[4/5] overflow-visible relative cursor-pointer group-hover:shadow-[10px_10px_0px_var(--shadow-hi-c)]">
+                <span class="tape -top-3 left-1/2 -translate-x-1/2 -rotate-3"></span>
+                <div class="w-full h-full overflow-hidden bg-mustard relative">
+                    <img src="${item.src}" alt="${item.title}" loading="lazy" draggable="false" class="w-full h-full object-cover pointer-events-none" onerror="this.src='https://placehold.co/400x500/E47475/1A1A1A?text=Error';">
+                    <!-- ORNAMEN (pointer-events: none, klik tetap tembus ke kartu) -->
+                    <span class="ornament ornament-halftone ornament-halftone--tr ornament-halftone--sm ornament-front" aria-hidden="true"></span>
+                    <span class="stamp-badge stamp-badge--red stamp-badge--sm top-2 right-2 rotate-6" aria-hidden="true">Poster</span>
+                    ${idx === 0 ? `<span class="ornament ornament-star ornament-star--sm top-2 left-2 -rotate-12" aria-hidden="true"><span>New!</span></span>` : ""}
+                    <div class="absolute bottom-0 left-0 w-full px-3 py-2 bg-paper border-t-4 border-ink pointer-events-none">
+                        <h4 class="font-display text-xs uppercase leading-tight line-clamp-2">${item.title}</h4>
+                    </div>
                 </div>
             </div>
         </div>`;
@@ -651,16 +686,25 @@ function initDocumentation() {
 function renderEventFolders() {
     const container = document.getElementById("event-folders-grid");
     let html = "";
-    eventsList.forEach((ev) => {
+    eventsList.forEach((ev, idx) => {
+        const tilt = idx % 2 === 0 ? "hover:rotate-1" : "hover:-rotate-1";
         html += `
-        <div onclick="openEventFolder('${ev.id}', '${ev.name}')" class="glass-panel p-8 rounded-2xl border border-red-500/30 hover:bg-red-900/40 hover:-translate-y-2 hover:shadow-[0_10px_30px_rgba(220,38,38,0.3)] transition-all cursor-pointer group text-center flex flex-col items-center justify-center gap-4">
-            <div class="w-20 h-20 rounded-full bg-black/50 flex items-center justify-center border-2 border-red-500 shadow-[0_0_15px_rgba(220,38,38,0.2)] group-hover:shadow-[0_0_25px_rgba(220,38,38,0.8)] group-hover:bg-red-600 transition-all duration-300">
-                <i class="fas ${ev.icon} text-3xl text-red-500 group-hover:text-white transition-colors duration-300"></i>
+        <div onclick="openEventFolder('${ev.id}', '${ev.name}')" class="rt-card group relative ornament-host p-6 md:p-8 cursor-pointer text-center flex flex-col items-center gap-4 hover:-translate-y-1 ${tilt} hover:shadow-[10px_10px_0px_var(--shadow-hi-c)]">
+            <div class="ornament-layer" aria-hidden="true">
+                <span class="ornament ornament-halftone ornament-halftone--br ornament-halftone--sm"></span>
+                <span class="ornament ornament-star ornament-star--ghost ornament-star--lg left-1/2 top-[5rem] -translate-x-1/2 -translate-y-1/2 ${idx % 2 === 0 ? "rotate-12" : "-rotate-6"}"></span>
+            </div>
+            <span class="tape -top-3 left-1/2 -translate-x-1/2 -rotate-3"></span>
+            <span class="stamp-badge stamp-badge--solid stamp-badge--sm top-3 right-3 rotate-6" aria-hidden="true">Vol. ${String(idx + 1).padStart(2, "0")}</span>
+            <span class="absolute top-3 left-3 bg-ink text-cream text-[10px] px-2 py-0.5 tracking-widest uppercase font-semibold">No. ${String(idx + 1).padStart(2, "0")} · ${ev.id}</span>
+            <div class="w-20 h-20 mt-4 bg-mustard border-4 border-ink shadow-[4px_4px_0px_var(--shadow-c)] flex items-center justify-center group-hover:bg-brick transition-colors duration-200">
+                <i class="fas ${ev.icon} text-3xl text-ink group-hover:text-cream transition-colors duration-200"></i>
             </div>
             <div>
-                <h3 class="font-tech text-xl md:text-2xl font-bold text-white tracking-wider mb-2">${ev.name}</h3>
-                <p class="text-gray-400 text-xs md:text-sm">${ev.desc}</p>
+                <h3 class="font-display text-xl md:text-2xl uppercase tracking-tight mb-2">${ev.name}</h3>
+                <p class="text-sm leading-relaxed">${ev.desc}</p>
             </div>
+            <span class="w-full pt-3 border-t-2 border-dashed border-ink text-xs font-bold uppercase tracking-widest text-brick">Buka Album <i class="fas fa-arrow-right ml-1"></i></span>
         </div>`;
     });
     container.innerHTML = html;
@@ -683,7 +727,7 @@ function openEventFolder(eventId, eventName) {
         controls.classList.add("flex");
     }
     document.getElementById("doc-subtitle").innerHTML =
-        `<span class="text-red-500 font-bold">ALBUM:</span> ${eventName}`;
+        `<span class="text-brick font-bold">★ ALBUM:</span> ${eventName}`;
     renderMainDocGrid();
 }
 
@@ -715,9 +759,10 @@ function renderMainDocGrid(filter = "") {
         container.classList.remove("columns-1", "md:columns-2", "lg:columns-3", "space-y-6");
         container.classList.add("flex", "justify-center", "items-center", "w-full", "min-h-[300px]");
         html = `
-        <div class="max-w-md w-full text-center p-10 border border-gray-800 rounded-2xl bg-black/50 shadow-2xl">
-            <i class="fas fa-folder-open text-5xl text-gray-700 mb-4 block"></i>
-            <p class="text-gray-500 font-tech tracking-widest text-sm uppercase">Belum ada dokumentasi untuk event ini</p>
+        <div class="rt-card relative max-w-md w-full text-center p-10 shadow-[8px_8px_0px_var(--shadow-c)]">
+            <span class="tape -top-3 left-1/2 -translate-x-1/2 -rotate-3"></span>
+            <i class="fas fa-folder-open text-5xl text-brick mb-4 block"></i>
+            <p class="font-display tracking-widest text-sm uppercase">Belum ada dokumentasi untuk event ini</p>
         </div>`;
     } else {
         container.classList.add("columns-1", "md:columns-2", "lg:columns-3", "space-y-6");
@@ -735,47 +780,119 @@ function handleSearch(event) {
 
 function createMediaCard(item, isSmall = false) {
     const margin = isSmall ? "mb-4" : "mb-6";
-    const isLogo = item.ratio === "aspect-square" && item.title.toLowerCase().includes("logo");
-    const shapeClass = isLogo
-        ? `rounded-full aspect-square border-4 border-red-600/30 shadow-[0_0_25px_rgba(220,38,38,0.4)]`
-        : `rounded-xl`;
-    const textPosition = isLogo ? "inset-0 flex items-end justify-center pb-6" : "bottom-4 left-4";
+    const _n = _mediaCardCounter++;
+    const tilt = (_n % 2 === 0) ? "-rotate-1" : "rotate-1";
+    // ORNAMEN: selotip di sudut kiri-atas (terpotong overflow-hidden = kesan menempel di pojok foto)
+    const cornerTape = `<span class="ornament ornament-tape ornament-tape--lg ornament-tape--${_n % 2 === 0 ? "stripe" : "dots"} -top-1 -left-8 -rotate-45 z-20" aria-hidden="true"></span>`;
+    const cardClass = `break-inside-avoid relative group rt-card overflow-hidden cursor-pointer ${margin} ${tilt} hover:rotate-0 hover:-translate-y-1 hover:shadow-[10px_10px_0px_var(--shadow-hi-c)]`;
 
     const adminCheckbox = isAdmin
-        ? `<div class="absolute top-3 right-3 z-30">
-            <input type="checkbox" value="${item.id}" onclick="event.stopPropagation()" onchange="toggleSelectFile(event, '${item.id}')" class="w-6 h-6 cursor-pointer rounded-full accent-red-600 border-2 border-white shadow-[0_0_10px_rgba(0,0,0,0.8)] transition-transform hover:scale-110">
+        ? `<div class="absolute top-3 right-3 z-30 bg-paper border-2 border-ink p-1 shadow-[2px_2px_0px_var(--shadow-c)]">
+            <input type="checkbox" value="${item.id}" onclick="event.stopPropagation()" onchange="toggleSelectFile(event, '${item.id}')" class="block w-5 h-5 cursor-pointer accent-[#edebdd]">
            </div>`
         : "";
 
+    const caption = `
+            <div class="px-3 py-2 bg-paper border-t-4 border-ink flex items-center justify-between gap-2">
+                <h3 class="font-display text-xs md:text-sm uppercase leading-tight truncate">${item.title}</h3>
+                <span class="text-brick text-sm shrink-0">★</span>
+            </div>`;
+
     if (item.type === "video") {
         return `
-        <div class="break-inside-avoid relative group ${shapeClass} overflow-hidden glass-panel cursor-pointer ${margin}" onclick="openMediaModal('video', '${item.src}')">
+        <div class="${cardClass}" onclick="openMediaModal('video', '${item.src}')">
             ${adminCheckbox}
-            <div class="w-full h-auto bg-black/50 flex items-center justify-center relative">
+            ${cornerTape}
+            <div class="w-full h-auto bg-ink flex items-center justify-center relative">
                 ${item.src
-                    ? `<video preload="none" class="w-full h-auto object-contain opacity-80 group-hover:opacity-100 transition duration-500" loop muted onmouseenter="previewVideo(this)" onmouseleave="stopPreview(this)"><source src="${item.src}" type="video/mp4"></video>`
-                    : `<i class="fas fa-video text-gray-600 text-4xl py-20"></i>`}
-                <div class="absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 w-14 h-14 bg-red-600/80 rounded-full flex items-center justify-center text-white text-xl opacity-80 group-hover:opacity-100 group-hover:scale-110 transition-all z-20 pointer-events-none shadow-[0_0_15px_rgba(220,38,38,0.6)]">
-                    <i class="fas fa-play ml-1"></i>
-                </div>
+                    ? `<video preload="none" class="w-full h-auto object-contain opacity-90 group-hover:opacity-100 transition duration-300" loop muted onmouseenter="previewVideo(this)" onmouseleave="stopPreview(this)"><source src="${item.src}" type="video/mp4"></video>`
+                    : `<i class="fas fa-video text-cream text-4xl py-20"></i>`}
+                <div class="play-overlay"><i class="fas fa-play ml-1"></i></div>
             </div>
-            <div class="absolute z-10 ${textPosition}">
-                <span class="text-xs font-bold text-white bg-red-600 px-2 py-1 rounded shadow-lg">${item.title}</span>
-            </div>
+            ${caption}
         </div>`;
     } else {
         return `
-        <div class="break-inside-avoid relative group ${shapeClass} overflow-hidden glass-panel cursor-pointer ${margin}" onclick="openMediaModal('image', '${item.src}')">
+        <div class="${cardClass}" onclick="openMediaModal('image', '${item.src}')">
             ${adminCheckbox}
-            <img src="${item.src}" alt="${item.title}" loading="lazy" decoding="async"
-                 class="w-full h-auto object-cover transition-transform duration-700 group-hover:scale-110"
-                 onerror="this.src='https://placehold.co/600x800/1a0505/FFF?text=No+Image';">
-            <div class="absolute inset-x-0 bottom-0 h-1/2 bg-gradient-to-t from-black/90 via-black/40 to-transparent opacity-80 pointer-events-none"></div>
-            <div class="absolute z-10 ${textPosition} pointer-events-none">
-                <h3 class="text-lg font-bold text-white drop-shadow-[0_2px_4px_rgba(0,0,0,0.8)]">${item.title}</h3>
+            ${cornerTape}
+            <div class="relative bg-mustard">
+                <img src="${item.src}" alt="${item.title}" loading="lazy" decoding="async"
+                     class="block w-full h-auto object-cover"
+                     onerror="this.src='https://placehold.co/600x800/E47475/1A1A1A?text=No+Image';">
             </div>
+            ${caption}
         </div>`;
     }
+}
+
+// ==========================================
+// INTRO & MUSIC
+// ==========================================
+
+const PLAYLIST = [
+    { title: "Into You - Altare", src: "assets/music/Intoyouxbye.mp3" },
+    { title: "Circus - Altare", src: "assets/music/circus.mp3" },
+    { title: "Bye - Altare", src: "assets/music/bye.mp3" },
+
+];
+
+let isPlaying = true;
+let shuffleQueue = [];
+let currentTrack = -1;
+let failedTracks = 0;    
+
+function nextRandomIndex() {
+    if (shuffleQueue.length === 0) {
+        shuffleQueue = PLAYLIST.map((_, i) => i);
+        for (let i = shuffleQueue.length - 1; i > 0; i--) {   
+            const j = Math.floor(Math.random() * (i + 1));
+            [shuffleQueue[i], shuffleQueue[j]] = [shuffleQueue[j], shuffleQueue[i]];
+        }
+        if (shuffleQueue.length > 1 && shuffleQueue[0] === currentTrack) {
+            shuffleQueue.push(shuffleQueue.shift());
+        }
+    }
+    return shuffleQueue.shift();
+}
+
+function updateTrackUI() {
+    const t = PLAYLIST[currentTrack];
+    if (!t) return;
+    const np = document.getElementById("np-title");
+    const tt = document.getElementById("tt-title");
+    if (np) np.textContent = t.title;
+    if (tt) tt.textContent = "Side A · " + t.title;
+}
+
+function loadTrack(idx, autoplay) {
+    const audio = document.getElementById("bg-music");
+    if (!audio || !PLAYLIST[idx]) return;
+    currentTrack = idx;
+    audio.src = PLAYLIST[idx].src;
+    updateTrackUI();
+    if (autoplay) audio.play().catch((e) => console.log("Autoplay blocked", e));
+}
+
+function playRandom() {
+    loadTrack(nextRandomIndex(), true);
+    isPlaying = true;
+    syncMusicUI();
+}
+function shuffleNext() { failedTracks = 0; playRandom(); }
+
+function initPlaylist() {
+    const audio = document.getElementById("bg-music");
+    if (!audio) return;
+    audio.removeAttribute("loop");
+    audio.addEventListener("ended", playRandom);
+    audio.addEventListener("playing", () => { failedTracks = 0; });
+    audio.addEventListener("error", () => {
+        failedTracks++;
+        if (failedTracks < PLAYLIST.length) playRandom();
+        else { isPlaying = false; syncMusicUI(); }
+    });
+    loadTrack(nextRandomIndex(), false);   
 }
 
 // ==========================================
@@ -799,21 +916,69 @@ function enterSite() {
     }, 100);
 }
 
-let isPlaying = true;
+function syncMusicUI() {
+    const btn = document.getElementById("music-btn");
+    if (btn) {
+        btn.innerHTML = isPlaying ? '<i class="fas fa-music"></i>' : '<i class="fas fa-volume-mute"></i>';
+        btn.classList.toggle("music-pulse", isPlaying);
+    }
+    ["turntable", "now-playing"].forEach((id) => {
+        const el = document.getElementById(id);
+        if (el) el.classList.toggle("is-playing", isPlaying);
+    });
+}
+
 function toggleMusic() {
     const audio = document.getElementById("bg-music");
-    const btn = document.getElementById("music-btn");
     if (isPlaying) {
         audio.pause();
-        btn.innerHTML = '<i class="fas fa-volume-mute"></i>';
-        btn.classList.remove("music-pulse");
         isPlaying = false;
     } else {
-        audio.play();
-        btn.innerHTML = '<i class="fas fa-music"></i>';
-        btn.classList.add("music-pulse");
+        audio.play().catch((e) => console.log(e));
         isPlaying = true;
     }
+    syncMusicUI();
+}
+
+function playTrack(i) {
+    if (!timelineData[i]) return;
+    document.querySelectorAll(".track-row").forEach((row, idx) => row.classList.toggle("is-active", idx === i));
+    if (!isPlaying) {
+        document.getElementById("bg-music").play().catch((e) => console.log(e));
+        isPlaying = true;
+        syncMusicUI();
+    }
+}
+
+// ==========================================
+// THEME (terang merah / gelap)
+// ==========================================
+function applyTheme(theme) {
+    document.documentElement.setAttribute("data-theme", theme);
+    const meta = document.querySelector('meta[name="theme-color"]');
+    if (meta) meta.setAttribute("content", theme === "dark" ? "#1b1717" : "#810100");
+}
+
+function toggleTheme() {
+    const current = document.documentElement.getAttribute("data-theme") === "dark" ? "dark" : "light";
+    const next = current === "dark" ? "light" : "dark";
+    applyTheme(next);
+    try { localStorage.setItem("hmps-theme", next); } catch (e) {}
+}
+
+// ==========================================
+// SCROLL PROGRESS BAR
+// ==========================================
+function initScrollProgress() {
+    const bar = document.getElementById("scroll-progress");
+    if (!bar) return;
+    const update = () => {
+        const h = document.documentElement.scrollHeight - window.innerHeight;
+        bar.style.width = (h > 0 ? Math.min(100, (window.scrollY / h) * 100) : 0) + "%";
+    };
+    window.addEventListener("scroll", update, { passive: true });
+    window.addEventListener("resize", update);
+    update();
 }
 
 document.addEventListener("visibilitychange", function () {
@@ -846,21 +1011,15 @@ function _switchTabUI(tabId) {
     const desktopBtns = document.querySelectorAll(".nav-btn");
     const mobileBtns = document.querySelectorAll(".mobile-nav-btn");
 
-    desktopBtns.forEach(btn => {
-        btn.classList.remove("text-white", "border-red-500");
-        btn.classList.add("text-gray-300", "border-transparent");
-        if (btn.getAttribute("onclick").includes(`'${tabId}'`)) {
-            btn.classList.remove("text-gray-300", "border-transparent");
-            btn.classList.add("text-white", "border-red-500");
-        }
-    });
+    const ACTIVE_NAV = ["bg-mustard", "text-ink", "border-ink"];
+    const INACTIVE_NAV = ["text-cream", "border-transparent"];
 
-    mobileBtns.forEach(btn => {
-        btn.classList.remove("text-red-500", "bg-red-900/20", "border-red-500");
-        btn.classList.add("text-gray-300", "border-transparent");
+    [...desktopBtns, ...mobileBtns].forEach(btn => {
+        btn.classList.remove(...ACTIVE_NAV);
+        btn.classList.add(...INACTIVE_NAV);
         if (btn.getAttribute("onclick").includes(`'${tabId}'`)) {
-            btn.classList.remove("text-gray-300", "border-transparent");
-            btn.classList.add("text-red-500", "bg-red-900/20", "border-red-500");
+            btn.classList.remove(...INACTIVE_NAV);
+            btn.classList.add(...ACTIVE_NAV);
         }
     });
 
@@ -884,12 +1043,14 @@ function generateStudents() {
     let html = "";
     studentsData.forEach((student, index) => {
         html += `
-        <div class="glass-panel p-4 rounded-xl border border-red-500/30 text-center hover:bg-red-900/40 transition-all cursor-pointer group hover:-translate-y-1" onclick="openBioModal(${index})">
-            <div class="w-24 h-24 mx-auto bg-gray-700 rounded-full mb-3 overflow-hidden border-2 border-red-500 shadow-[0_0_15px_rgba(220,38,38,0.3)] group-hover:shadow-[0_0_20px_rgba(220,38,38,0.6)] transition-all">
-                <img src="${student.img}" loading="lazy" decoding="async" alt="${student.name}" class="w-full h-full object-cover group-hover:scale-110 transition-transform duration-500" onerror="this.onerror=null; this.src='https://ui-avatars.com/api/?name=${encodeURIComponent(student.name)}&background=random';">
+        <div class="member-card group p-3 text-center odd:-rotate-1 even:rotate-1 hover:rotate-0 hover:-translate-y-1" onclick="openBioModal(${index})">
+            <span class="ornament ornament-tape ornament-tape--${index % 2 === 0 ? "stripe" : "dots"} -top-3 left-1/2 -translate-x-1/2 ${index % 3 === 0 ? "-rotate-3" : "rotate-2"}" style="width:3.8rem;height:1.3rem" aria-hidden="true"></span>
+            <div class="relative w-full aspect-square mb-3 border-4 border-ink bg-mustard overflow-hidden">
+                <img src="${student.img}" loading="lazy" decoding="async" alt="${student.name}" class="w-full h-full object-cover group-hover:scale-110 transition-transform duration-500" onerror="this.onerror=null; this.src='https://ui-avatars.com/api/?name=${encodeURIComponent(student.name)}&background=E47475&color=1A1A1A';">
+                <div class="halftone absolute inset-0"></div>
             </div>
-            <h3 class="font-bold text-red-400 text-base group-hover:text-white transition-colors">${student.name}</h3>
-            <p class="text-[10px] text-gray-400 mt-1 uppercase tracking-wider">Detail <i class="fas fa-arrow-right ml-1"></i></p>
+            <h3 class="font-display text-xs md:text-sm uppercase leading-tight line-clamp-2 min-h-[2.4em]">${student.name}</h3>
+            <p class="text-[10px] mt-2 uppercase tracking-widest text-brick font-bold">Detail <i class="fas fa-arrow-right ml-1"></i></p>
         </div>`;
     });
     grid.innerHTML = html;
@@ -926,10 +1087,10 @@ function openBioModal(index) {
 
     const igContainer = document.getElementById("modal-ig");
     if (student.ig === "-" || student.ig === "") {
-        igContainer.innerHTML = `<span class="text-gray-500">-</span>`;
+        igContainer.innerHTML = `<span class="text-ink/60">-</span>`;
     } else {
         const username = student.ig.replace("@", "").trim();
-        igContainer.innerHTML = `<a href="https://www.instagram.com/${username}" target="_blank" rel="noopener noreferrer" class="text-lg text-white font-medium hover:text-red-400 transition cursor-pointer flex items-center gap-1">${student.ig} <i class="fas fa-external-link-alt text-xs ml-1 opacity-50"></i></a>`;
+        igContainer.innerHTML = `<a href="https://www.instagram.com/${username}" target="_blank" rel="noopener noreferrer" class="font-semibold text-ink hover:text-brick underline decoration-2 decoration-mustard transition cursor-pointer flex items-center gap-1">${student.ig} <i class="fas fa-external-link-alt text-xs ml-1 opacity-50"></i></a>`;
     }
     document.getElementById("modal-bio").innerText = `"${student.bio}"`;
 
@@ -945,7 +1106,7 @@ function openBioModal(index) {
     };
     imgElement.onerror = function () {
         this.onerror = null;
-        this.src = `https://ui-avatars.com/api/?name=${encodeURIComponent(student.name)}&background=random&size=400`;
+        this.src = `https://ui-avatars.com/api/?name=${encodeURIComponent(student.name)}&background=E47475&color=1A1A1A&size=400`;
         imgElement.style.opacity = "1";
         loaderElement.style.display = "none";
     };
@@ -1013,6 +1174,7 @@ function closeMediaModal(e, force = false) {
                 musicBtn.innerHTML = '<i class="fas fa-music"></i>';
                 musicBtn.classList.add("music-pulse");
                 isPlaying = true;
+                syncMusicUI();
             }
         }
     }
@@ -1073,8 +1235,8 @@ window.addEventListener("popstate", function (event) {
 // ==========================================
 function showToast(msg) {
     const toast = document.createElement("div");
-    toast.className = "toast-msg font-tech tracking-wider border-l-4 border-l-red-600";
-    toast.innerHTML = `<i class="fas fa-check-circle text-red-500 mr-2"></i> ${msg}`;
+    toast.className = "toast-msg tracking-wider";
+    toast.innerHTML = `<i class="fas fa-check-circle text-brick mr-2"></i> ${msg}`;
     document.body.appendChild(toast);
     setTimeout(() => {
         toast.style.opacity = "0";
@@ -1171,12 +1333,12 @@ function showNotifModal(type, title, message) {
     document.getElementById("notif-action-msg").innerText = message;
     if (type === "success") {
         document.getElementById("notif-action-icon").innerHTML =
-            '<i class="fas fa-check-circle text-green-500" style="filter:drop-shadow(0 0 12px rgba(34,197,94,0.7))"></i>';
-        btn.className = "w-full py-3 rounded-lg font-bold transition bg-green-600 hover:bg-green-500 text-white uppercase tracking-widest text-sm";
+            '<i class="fas fa-check-circle" style="color:#2F6B3A"></i>';
+        btn.className = "rt-btn rt-btn-green w-full";
     } else {
         document.getElementById("notif-action-icon").innerHTML =
-            '<i class="fas fa-times-circle text-red-500" style="filter:drop-shadow(0 0 12px rgba(239,68,68,0.7))"></i>';
-        btn.className = "w-full py-3 rounded-lg font-bold transition bg-red-700 hover:bg-red-600 text-white uppercase tracking-widest text-sm";
+            '<i class="fas fa-times-circle text-brick"></i>';
+        btn.className = "rt-btn rt-btn-red w-full";
     }
     modal.classList.add("active");
 }
@@ -1215,7 +1377,7 @@ function handleFileSelect(files) {
 
 function handleDrop(event) {
     event.preventDefault();
-    document.getElementById("drop-zone").classList.remove("border-red-500", "bg-red-950/10");
+    document.getElementById("drop-zone").classList.remove("border-brick", "bg-mustard/30");
     const files = event.dataTransfer.files;
     for (const file of files) uploadQueue.push(file);
     renderQueuePreview();
@@ -1247,20 +1409,20 @@ function renderQueuePreview() {
     const displayList = uploadQueue.slice(0, 50);
     list.innerHTML = displayList.map((file, i) => {
         const sizeKB = (file.size / 1024).toFixed(0);
-        const icon = file.type.startsWith("video") ? "fa-film text-blue-400" : "fa-image text-green-400";
-        return `<div class="flex items-center justify-between bg-black/30 px-3 py-1.5 rounded text-[10px]">
+        const icon = file.type.startsWith("video") ? "fa-film text-brick" : "fa-image text-espresso";
+        return `<div class="flex items-center justify-between bg-paper border-2 border-ink px-3 py-1.5 text-xs">
             <div class="flex items-center gap-2 min-w-0">
                 <i class="fas ${icon}"></i>
-                <span class="text-gray-300 truncate">${file.name}</span>
+                <span class="truncate">${file.name}</span>
             </div>
             <div class="flex items-center gap-2 shrink-0 ml-2">
-                <span class="text-gray-600">${sizeKB} KB</span>
-                <button type="button" onclick="removeFromQueue(${i})" class="text-gray-600 hover:text-red-500 transition"><i class="fas fa-times"></i></button>
+                <span class="text-ink/60">${sizeKB} KB</span>
+                <button type="button" onclick="removeFromQueue(${i})" class="text-ink hover:text-brick transition"><i class="fas fa-times"></i></button>
             </div>
         </div>`;
     }).join("");
     if (uploadQueue.length > 50) {
-        list.innerHTML += `<p class="text-center text-gray-600 text-[9px] py-1">... dan ${uploadQueue.length - 50} file lainnya</p>`;
+        list.innerHTML += `<p class="text-center text-ink/60 text-xs py-1">... dan ${uploadQueue.length - 50} file lainnya</p>`;
     }
 }
 
@@ -1311,16 +1473,16 @@ async function handleBulkUpload(event) {
             if (result.success) sukses++;
             else {
                 gagal++;
-                errors.push(`<p class="text-red-500 text-[9px]"><i class="fas fa-times-circle mr-1"></i>${file.name}: ${result.message}</p>`);
+                errors.push(`<p class="text-brick text-xs font-semibold"><i class="fas fa-times-circle mr-1"></i>${file.name}: ${result.message}</p>`);
             }
         } catch (err) {
             gagal++;
-            errors.push(`<p class="text-red-500 text-[9px]"><i class="fas fa-times-circle mr-1"></i>${file.name}: Koneksi gagal</p>`);
+            errors.push(`<p class="text-brick text-xs font-semibold"><i class="fas fa-times-circle mr-1"></i>${file.name}: Koneksi gagal</p>`);
         }
     }
 
     progressBar.style.width = "100%";
-    progressBar.classList.replace("bg-red-600", sukses > 0 ? "bg-green-600" : "bg-red-600");
+    progressBar.classList.replace("bg-brick", sukses > 0 ? "bg-green-700" : "bg-brick");
     progressText.innerText = `${total} / ${total}`;
     currentFile.innerText = `Selesai! ${sukses} berhasil${gagal > 0 ? `, ${gagal} gagal` : ""}.`;
     if (errors.length > 0) errorList.innerHTML = errors.join("");
@@ -1337,7 +1499,7 @@ async function handleBulkUpload(event) {
     if (gagal === 0) {
         showNotifModal("success", "UPLOAD SELESAI", `${sukses} file berhasil diunggah!`);
         progressContainer.classList.add("hidden");
-        progressBar.classList.replace("bg-green-600", "bg-red-600");
+        progressBar.classList.replace("bg-green-700", "bg-brick");
         progressBar.style.width = "0%";
         closeUploadModal(null, true);
     } else {
@@ -1355,22 +1517,39 @@ function renderNewsList() {
     let html = "";
     const reversedNews = [...newsData].reverse();
 
-    reversedNews.forEach((news) => {
+    // PENTING: elemen paling luar harus <div> (CSS #news-grid > div:nth-child(n+4) menyembunyikan artikel ke-4 dst)
+    reversedNews.forEach((news, idx) => {
+        const tilt = idx % 2 === 0 ? "hover:rotate-1" : "hover:-rotate-1";
+        // ORNAMEN: artikel terbaru pakai starburst "NEW!", sisanya stiker bintang
+        const sticker = idx === 0
+            ? `<span class="ornament ornament-star ornament-star--md top-2 right-2 rotate-12" style="--s:4.4rem" aria-hidden="true"><span>New!</span></span>`
+            : `<div class="sticker absolute top-2 right-2 w-10 h-10 rotate-12 text-lg">★</div>`;
+        const volNo = String(reversedNews.length - idx).padStart(2, "0");
         html += `
-        <div class="glass-panel rounded-2xl overflow-hidden group hover:-translate-y-3 transition-all duration-500 border border-red-500/20 hover:border-red-500/50 hover:shadow-[0_15px_30px_rgba(220,38,38,0.2)] flex flex-col">
-            <div class="relative h-56 overflow-hidden bg-black">
-                <img src="${news.img}" alt="${news.title}" loading="lazy" decoding="async" class="w-full h-full object-cover group-hover:scale-110 transition-transform duration-700 opacity-80 group-hover:opacity-100">
-                <div class="absolute top-4 left-4 ${news.color} text-white text-[10px] font-bold px-3 py-1 rounded shadow-lg uppercase tracking-widest backdrop-blur-sm bg-opacity-90">${news.category}</div>
+        <div class="rt-card group relative ornament-host flex flex-col hover:-translate-y-1 ${tilt} hover:shadow-[10px_10px_0px_var(--shadow-hi-c)]">
+            <div class="ornament-layer" aria-hidden="true">
+                <span class="ornament ornament-halftone ornament-halftone--br ornament-halftone--sm"></span>
             </div>
-            <div class="p-6 flex flex-col flex-grow">
-                <div class="flex items-center gap-2 text-[11px] text-gray-500 mb-3 font-tech tracking-wider">
-                    <i class="far fa-calendar-alt text-red-500"></i> ${news.date}
+            <span class="ornament ornament-tape ornament-tape--${idx % 2 === 0 ? "stripe" : "dots"} -top-3 left-1/2 -translate-x-1/2 ${idx % 2 === 0 ? "-rotate-3" : "rotate-2"}" aria-hidden="true"></span>
+            <div class="relative isolate h-48 bg-mustard border-b-4 border-ink overflow-hidden">
+                <img src="${news.img}" alt="${news.title}" loading="lazy" decoding="async" class="w-full h-full object-cover grayscale contrast-125 mix-blend-multiply group-hover:grayscale-0 group-hover:mix-blend-normal transition duration-300">
+                <div class="halftone absolute inset-0"></div>
+                ${sticker}
+                <span class="ornament ornament-torn ornament-torn--bottom ornament-torn--surface" aria-hidden="true"></span>
+                <span class="stamp-badge stamp-badge--solid stamp-badge--sm bottom-5 left-3 -rotate-6" aria-hidden="true">Vol. ${volNo}</span>
+            </div>
+            <div class="p-4 md:p-5 flex flex-col gap-3 flex-grow">
+                <div class="flex flex-wrap items-center justify-between gap-2">
+                    <span class="px-2 py-1 text-[10px] font-semibold uppercase tracking-widest border-2 border-ink ${getCategoryStyle(news.category)}">${news.category}</span>
+                    <span class="text-[11px] font-medium uppercase tracking-wider"><i class="far fa-calendar-alt text-brick mr-1"></i>${news.date}</span>
                 </div>
-                <h3 class="text-xl font-bold text-white mb-3 leading-snug group-hover:text-red-400 transition-colors line-clamp-2">${news.title}</h3>
-                <p class="text-sm text-gray-400 mb-6 line-clamp-3 flex-grow">${news.excerpt}</p>
-                <button onclick="openNewsModal(${news.id})" class="inline-flex items-center text-sm font-bold text-red-500 hover:text-white transition-colors w-fit border-b border-transparent hover:border-white pb-1">
-                    Baca Selengkapnya <i class="fas fa-arrow-right ml-2 text-xs transition-transform group-hover:translate-x-2"></i>
-                </button>
+                <h3 class="font-display text-lg leading-tight uppercase tracking-tight line-clamp-3">${news.title}</h3>
+                <p class="text-sm leading-relaxed text-ink/80 line-clamp-3 flex-grow">${news.excerpt}</p>
+                <div class="pt-3 border-t-2 border-dashed border-ink">
+                    <button onclick="openNewsModal(${news.id})" class="inline-flex items-center text-sm font-bold uppercase tracking-widest text-brick hover:underline w-fit">
+                        Baca Selengkapnya <i class="fas fa-arrow-right ml-2 text-xs transition-transform group-hover:translate-x-2"></i>
+                    </button>
+                </div>
             </div>
         </div>`;
     });
@@ -1385,7 +1564,7 @@ function openNewsModal(id) {
     document.getElementById("news-modal-img").src = news.img;
     document.getElementById("news-modal-category").innerText = news.category;
     document.getElementById("news-modal-category").className =
-        `absolute top-6 left-6 ${news.color} text-white text-xs font-bold px-3 py-1 rounded shadow-lg uppercase tracking-widest`;
+        `absolute top-4 left-4 ${getCategoryStyle(news.category)} border-2 border-ink text-xs font-semibold px-3 py-1 uppercase tracking-widest shadow-[3px_3px_0px_var(--shadow-c)]`;
     document.getElementById("news-modal-date").innerText = news.date;
     document.getElementById("news-modal-title").innerText = news.title;
     document.getElementById("news-modal-body").innerHTML = news.content;
@@ -1425,11 +1604,11 @@ function toggleNews() {
     if (grid.classList.contains("show-all")) {
         grid.classList.remove("show-all");
         text.innerText = "Lihat Semua Artikel";
-        icon.className = "fas fa-angle-double-right ml-2 group-hover:translate-x-1 transition-transform";
+        icon.className = "fas fa-angle-double-right ml-2";
     } else {
         grid.classList.add("show-all");
         text.innerText = "Tutup Sebagian Artikel";
-        icon.className = "fas fa-angle-double-up ml-2 group-hover:-translate-y-1 transition-transform";
+        icon.className = "fas fa-angle-double-up ml-2";
     }
 }
 
@@ -1449,6 +1628,19 @@ function renderPendaftaranPortal() {
         .filter(n => n.category && n.category.toLowerCase() === 'kompetisi')
         .reverse();
 
+    const emptyHtml = (extra) => `
+        <div class="rt-card relative ornament-host p-10 text-center shadow-[8px_8px_0px_var(--shadow-c)] w-full max-w-lg">
+            <div class="ornament-layer" aria-hidden="true">
+                <span class="ornament ornament-halftone ornament-halftone--br ornament-halftone--sm"></span>
+            </div>
+            <span class="tape -top-3 left-1/2 -translate-x-1/2 -rotate-3"></span>
+            <span class="stamp-badge stamp-badge--red top-4 right-4 rotate-6" aria-hidden="true">Coming Soon</span>
+            <i class="fas fa-rocket text-6xl text-brick mb-6"></i>
+            <h3 class="text-2xl font-display uppercase mb-2">Belum Ada Kompetisi</h3>
+            <p class="text-sm leading-relaxed">Saat ini belum ada event atau perlombaan yang sedang membuka pendaftaran.${extra}</p>
+        </div>`;
+    const emptyClass = "max-w-4xl mx-auto px-4 flex justify-center items-center min-h-[40vh]";
+
     if (competitions.length > 0) {
         let html = '';
         competitions.forEach(c => {
@@ -1457,40 +1649,37 @@ function renderPendaftaranPortal() {
                 return;
             }
             html += `
-            <div class="glass-panel p-6 md:p-8 rounded-2xl border border-red-500/30 flex flex-col md:flex-row gap-6 items-center hover:border-red-500/60 transition-all">
-                <div class="w-full md:w-1/3 aspect-video rounded-xl overflow-hidden">
+            <div class="rt-card relative ornament-host flex flex-col md:flex-row gap-6 items-center p-5 md:p-6 hover:-translate-y-1 hover:shadow-[10px_10px_0px_var(--shadow-hi-c)]">
+                <div class="ornament-layer" aria-hidden="true">
+                    <span class="ornament ornament-halftone ornament-halftone--br"></span>
+                    <span class="ornament ornament-halftone ornament-halftone--tr ornament-halftone--sm"></span>
+                </div>
+                <span class="tape -top-3 left-8 -rotate-2"></span>
+                <span class="stamp-badge stamp-badge--red bottom-4 right-4 -rotate-6 hidden md:block" aria-hidden="true">Approved</span>
+                <div class="relative w-full md:w-1/3 aspect-video border-4 border-ink overflow-hidden bg-mustard shrink-0">
                     <img src="${c.img}" loading="lazy" decoding="async" class="w-full h-full object-cover">
+                    <span class="absolute top-2 left-2 -rotate-6 bg-brick text-cream border-2 border-ink px-2 py-1 font-display text-[10px] tracking-widest shadow-[2px_2px_0px_var(--shadow-c)] pointer-events-none">★ OPEN</span>
                 </div>
                 <div class="flex-grow text-center md:text-left">
-                    <h3 class="text-xl font-bold text-white mb-2">${c.title}</h3>
-                    <p class="text-gray-400 text-sm mb-4 italic">Pendaftaran Aktif</p>
-                    <button onclick="openDaftarModal('${c.folderName}')" class="inline-block bg-gradient-to-r from-red-700 to-red-500 hover:from-red-600 hover:to-red-400 text-white px-6 py-2 rounded-lg font-bold transition-all shadow-[0_0_15px_rgba(220,38,38,0.4)]">
-                        DAFTAR SEKARANG <i class="fas fa-edit ml-2"></i>
+                    <h3 class="font-display text-xl md:text-2xl uppercase tracking-tight leading-tight mb-2">${c.title}</h3>
+                    <p class="text-sm mb-4 italic border-b-2 border-dashed border-ink pb-3">Pendaftaran Aktif</p>
+                    <button onclick="openDaftarModal('${c.folderName}')" class="rt-btn rt-btn-red">
+                        DAFTAR SEKARANG <i class="fas fa-edit ml-1"></i>
                     </button>
                 </div>
             </div>`;
         });
 
         if (html === "") {
-            container.className = "max-w-4xl mx-auto px-4 flex justify-center items-center min-h-[40vh]";
-            container.innerHTML = `
-            <div class="glass-panel p-10 rounded-2xl border border-red-500/30 text-center shadow-[0_0_30px_rgba(220,38,38,0.1)] w-full max-w-lg">
-                <i class="fas fa-rocket text-6xl text-gray-600 mb-6 drop-shadow-md"></i>
-                <h3 class="text-2xl font-tech font-bold text-white mb-2">Belum Ada Kompetisi</h3>
-                <p class="text-gray-400 text-sm leading-relaxed">Saat ini belum ada event atau perlombaan yang sedang membuka pendaftaran.</p>
-            </div>`;
+            container.className = emptyClass;
+            container.innerHTML = emptyHtml('');
         } else {
-            container.className = "max-w-4xl mx-auto px-4 grid grid-cols-1 gap-6";
+            container.className = "max-w-4xl mx-auto px-4 grid grid-cols-1 gap-8 pt-3";
             container.innerHTML = html;
         }
     } else {
-        container.className = "max-w-4xl mx-auto px-4 flex justify-center items-center min-h-[40vh]";
-        container.innerHTML = `
-        <div class="glass-panel p-10 rounded-2xl border border-red-500/30 text-center shadow-[0_0_30px_rgba(220,38,38,0.1)] w-full max-w-lg">
-            <i class="fas fa-rocket text-6xl text-gray-600 mb-6 drop-shadow-md"></i>
-            <h3 class="text-2xl font-tech font-bold text-white mb-2">Belum Ada Kompetisi</h3>
-            <p class="text-gray-400 text-sm leading-relaxed">Saat ini belum ada event atau perlombaan yang sedang membuka pendaftaran. Nantikan info menarik selanjutnya!</p>
-        </div>`;
+        container.className = emptyClass;
+        container.innerHTML = emptyHtml(' Nantikan info menarik selanjutnya!');
     }
 }
 
@@ -1504,18 +1693,18 @@ function renderDivisionStructure() {
     const divisions = ["Public Speaking", "Media", "Intelektual", "PKM"];
     let html = '';
 
-    divisions.forEach(divName => {
+    divisions.forEach((divName, dIdx) => {
         const members = studentsData.filter(s => s.divisi === divName);
         const co = members.find(m => m.role === "CO");
         const staff = members.filter(m => m.role === "Anggota");
 
         if (members.length > 0) {
             html += `
-            <div class="division-block mb-16 md:mb-24 px-4">
-                <div class="flex items-center gap-4 mb-8 md:mb-12">
-                    <div class="h-[1px] md:h-[2px] flex-grow bg-gradient-to-r from-transparent to-red-900"></div>
-                    <h3 class="font-tech text-lg md:text-3xl font-bold text-white tracking-widest uppercase">${divName}</h3>
-                    <div class="h-[1px] md:h-[2px] flex-grow bg-gradient-to-l from-transparent to-red-900"></div>
+            <div class="division-block mb-16 md:mb-24 px-2 md:px-4">
+                <div class="flex items-center gap-3 md:gap-4 mb-8 md:mb-12">
+                    <div class="flex-grow ornament-zigzag" aria-hidden="true"></div>
+                    <h3 class="font-display text-base md:text-3xl uppercase tracking-tight bg-mustard border-4 border-ink px-3 md:px-5 py-1 shadow-[4px_4px_0px_var(--shadow-c)] ${dIdx % 2 === 0 ? '-rotate-1' : 'rotate-1'} text-center">★ ${divName}</h3>
+                    <div class="flex-grow ornament-zigzag" aria-hidden="true"></div>
                 </div>
 
                 <div class="hidden md:block">
@@ -1523,20 +1712,23 @@ function renderDivisionStructure() {
                         <ul>
                             <li>
                                 ${co ? `
-                                <div class="glass-panel p-5 rounded-2xl border border-red-500/40 inline-block w-52 text-center cursor-pointer transition-all hover:bg-red-900/40 shadow-lg relative z-10" onclick="openBioModalByName('${co.name}')">
-                                    <img src="${co.img}" class="w-20 h-20 mx-auto rounded-full mb-3 border-2 border-red-500 object-cover" onerror="this.src='https://ui-avatars.com/api/?name=${encodeURIComponent(co.name)}&background=random'">
-                                    <h4 class="text-white font-bold text-sm">${co.name}</h4>
-                                    <span class="inline-block bg-red-600 text-white text-[10px] px-3 py-1 rounded-full font-bold uppercase tracking-widest mt-2">CO DIVISI</span>
+                                <div class="member-card inline-block w-52 p-4 text-center bg-mustard relative z-10 hover:-translate-y-1" onclick="openBioModalByName('${co.name}')">
+                                    <span class="ornament ornament-star ornament-star--sm -top-4 -right-4 rotate-12" aria-hidden="true"><span>CO</span></span>
+                                    <div class="w-20 h-20 mx-auto mb-3 border-4 border-ink overflow-hidden bg-cream">
+                                        <img src="${co.img}" class="w-full h-full object-cover" onerror="this.src='https://ui-avatars.com/api/?name=${encodeURIComponent(co.name)}&background=E47475&color=1A1A1A'">
+                                    </div>
+                                    <h4 class="font-display text-sm uppercase leading-tight">${co.name}</h4>
+                                    <span class="inline-block bg-ink text-cream text-[10px] px-2 py-0.5 font-semibold uppercase tracking-widest mt-2">★ CO Divisi</span>
                                 </div>` : ''}
                                 <ul>
                                     ${staff.map(s => `
                                     <li>
-                                        <div class="glass-panel p-4 rounded-2xl border border-gray-800 hover:border-red-500/50 w-40 text-center cursor-pointer transition-all hover:-translate-y-1 relative z-20" onclick="openBioModalByName('${s.name}')">
-                                            <div class="w-16 h-16 mx-auto bg-gray-900 rounded-full mb-2 overflow-hidden border border-gray-700">
-                                                <img src="${s.img}" class="w-full h-full object-cover" onerror="this.src='https://ui-avatars.com/api/?name=${encodeURIComponent(s.name)}&background=random'">
+                                        <div class="member-card w-40 p-3 text-center relative z-20 hover:-translate-y-1" onclick="openBioModalByName('${s.name}')">
+                                            <div class="w-16 h-16 mx-auto mb-2 border-2 border-ink overflow-hidden bg-mustard">
+                                                <img src="${s.img}" class="w-full h-full object-cover" onerror="this.src='https://ui-avatars.com/api/?name=${encodeURIComponent(s.name)}&background=E47475&color=1A1A1A'">
                                             </div>
-                                            <h5 class="text-white text-xs font-bold line-clamp-1">${s.name}</h5>
-                                            <p class="text-[9px] text-gray-500 uppercase mt-1 tracking-widest">Anggota</p>
+                                            <h5 class="font-display text-xs uppercase leading-tight line-clamp-1">${s.name}</h5>
+                                            <p class="text-[10px] text-brick font-semibold uppercase mt-1 tracking-widest">Anggota</p>
                                         </div>
                                     </li>`).join('')}
                                 </ul>
@@ -1545,19 +1737,24 @@ function renderDivisionStructure() {
                     </div>
                 </div>
 
-                <div class="md:hidden flex flex-col items-center w-full overflow-hidden">
+                <div class="md:hidden flex flex-col items-center w-full overflow-hidden px-1 pb-2">
                     ${co ? `
-                    <div class="glass-panel p-4 rounded-xl border border-red-500/40 w-48 text-center mb-6" onclick="openBioModalByName('${co.name}')">
-                        <img src="${co.img}" class="w-16 h-16 mx-auto rounded-full mb-2 border border-red-500 object-cover">
-                        <h4 class="text-white font-bold text-xs">${co.name}</h4>
-                        <p class="text-[8px] text-red-500 uppercase font-bold mt-1">CO DIVISI</p>
+                    <div class="member-card bg-mustard p-4 w-48 text-center mb-6" onclick="openBioModalByName('${co.name}')">
+                        <span class="ornament ornament-star ornament-star--sm -top-4 -right-3 rotate-12" aria-hidden="true"><span>CO</span></span>
+                        <div class="w-16 h-16 mx-auto mb-2 border-4 border-ink overflow-hidden bg-cream">
+                            <img src="${co.img}" class="w-full h-full object-cover" onerror="this.src='https://ui-avatars.com/api/?name=${encodeURIComponent(co.name)}&background=E47475&color=1A1A1A'">
+                        </div>
+                        <h4 class="font-display text-xs uppercase leading-tight">${co.name}</h4>
+                        <p class="text-[9px] font-bold uppercase tracking-widest mt-1">★ CO Divisi</p>
                     </div>` : ''}
-                    <div class="flex flex-wrap justify-center gap-3 w-full px-2 overflow-hidden">
+                    <div class="flex flex-wrap justify-center gap-4 w-full px-2">
                         ${staff.map(s => `
-                        <div class="glass-panel p-3 rounded-xl border border-gray-800 w-[45%] text-center" onclick="openBioModalByName('${s.name}')">
-                            <img src="${s.img}" class="w-12 h-12 mx-auto rounded-full mb-2 object-cover border border-gray-700">
-                            <h5 class="text-white text-[10px] font-bold line-clamp-1">${s.name}</h5>
-                            <p class="text-[8px] text-gray-500 uppercase mt-1">Anggota</p>
+                        <div class="member-card p-3 w-[44%] text-center" onclick="openBioModalByName('${s.name}')">
+                            <div class="w-12 h-12 mx-auto mb-2 border-2 border-ink overflow-hidden bg-mustard">
+                                <img src="${s.img}" class="w-full h-full object-cover" onerror="this.src='https://ui-avatars.com/api/?name=${encodeURIComponent(s.name)}&background=E47475&color=1A1A1A'">
+                            </div>
+                            <h5 class="font-display text-[11px] uppercase leading-tight line-clamp-2">${s.name}</h5>
+                            <p class="text-[9px] text-brick font-bold uppercase mt-1 tracking-widest">Anggota</p>
                         </div>`).join('')}
                     </div>
                 </div>
@@ -1580,38 +1777,27 @@ function renderTimeline() {
     const container = document.getElementById('proker-timeline');
     if (!container) return;
 
-    let html = '<div class="relative border-l-2 border-red-900/50 ml-3 md:ml-6 space-y-8 md:space-y-12 py-4">';
-
-    timelineData.forEach((item) => {
-        const isCompleted = item.status === 'completed';
-        const dotColor = isCompleted ? 'bg-red-600 border-red-400 shadow-[0_0_15px_rgba(220,38,38,0.8)]' : 'bg-gray-900 border-gray-600';
-        const titleColor = isCompleted ? 'text-white' : 'text-gray-400';
-        const iconColor = isCompleted ? 'text-red-500' : 'text-gray-600';
-        const borderColor = isCompleted ? 'border-red-500/40 hover:border-red-500/80' : 'border-gray-800 hover:border-gray-600';
-
-        html += `
-        <div class="relative pl-8 md:pl-12 group cursor-default">
-            <div class="absolute -left-[11px] top-2 w-5 h-5 rounded-full border-2 ${dotColor} transition-all duration-500 group-hover:scale-125 flex items-center justify-center z-10"></div>
-            <div class="glass-panel p-5 md:p-8 rounded-2xl border ${borderColor} transition-all duration-500 hover:-translate-y-1 hover:shadow-xl">
-                <span class="text-[10px] md:text-xs font-bold ${isCompleted ? 'text-red-400' : 'text-gray-500'} uppercase tracking-widest mb-2 block">${item.month}</span>
-                <h4 class="text-xl md:text-2xl font-bold font-tech ${titleColor} mb-3 flex items-center gap-3 transition-colors duration-300">
-                    <i class="fas ${item.icon} ${iconColor} text-lg md:text-xl transition-colors duration-300"></i>
-                    ${item.title}
-                </h4>
-                <p class="text-xs md:text-sm text-gray-400 leading-relaxed">${item.desc}</p>
+    container.innerHTML = timelineData.map((item, idx) => {
+        const done = item.status === 'completed';
+        return `
+        <div class="track-row" onclick="playTrack(${idx})">
+            <span class="track-no">${String(idx + 1).padStart(2, '0')}</span>
+            <div class="min-w-0 flex-grow">
+                <div class="track-title">${item.title}<span class="track-badge">${done ? 'Done' : 'Next'}</span></div>
+                <div class="track-sub"><i class="fas ${item.icon} mr-1"></i>${item.month} · ${item.desc}</div>
             </div>
+            <button type="button" class="track-play" aria-label="Putar ${item.title}" onclick="event.stopPropagation(); playTrack(${idx})">
+                <i class="fas fa-play ml-0.5"></i>
+            </button>
         </div>`;
-    });
-
-    html += '</div>';
-    container.innerHTML = html;
+    }).join('');
 }
 
 // ==========================================
 // COUNTDOWN
 // ==========================================
 function startCountdown() {
-    const eventDate = new Date("Jun 5, 2026 08:00:00").getTime();
+    const eventDate = new Date("Nov 11, 2026 08:00:00").getTime();
 
     const timer = setInterval(() => {
         const now = new Date().getTime(), dist = eventDate - now;
@@ -1628,15 +1814,16 @@ function startCountdown() {
 
         if (dist < 0) {
             clearInterval(timer);
-            const subtitle = document.querySelector(".max-w-4xl.mx-auto.px-4.mb-20 h3");
+            // Selector lama (.max-w-4xl.mx-auto.px-4.mb-20 ...) diganti id supaya tahan perubahan layout
+            const subtitle = document.getElementById("countdown-title");
             if (subtitle) {
-                subtitle.innerText = "🔴 HAPPENING NOW / LIVE EVENT";
-                subtitle.classList.add("animate-pulse", "text-red-400");
+                subtitle.innerText = "★ HAPPENING NOW / LIVE EVENT ★";
+                subtitle.classList.add("animate-pulse");
             }
-            const timerGrid = document.querySelector(".max-w-4xl.mx-auto.px-4.mb-20 .glass-panel > div.flex.justify-center");
+            const timerGrid = document.getElementById("countdown-timer");
             if (timerGrid) {
                 timerGrid.innerHTML = `
-                <div class="text-2xl md:text-5xl font-tech font-bold text-red-500 tracking-[0.2em] shadow-red-500/50 drop-shadow-[0_0_20px_rgba(220,38,38,0.9)] py-4 my-4 border-y border-red-900/50">
+                <div class="font-display text-2xl md:text-5xl uppercase tracking-[0.15em] bg-paper text-brick border-4 border-ink shadow-[4px_4px_0px_var(--shadow-c)] px-4 py-4 my-2 -rotate-1">
                     SEDANG BERLANGSUNG
                 </div>`;
             }
@@ -1651,24 +1838,28 @@ function filterMembers() {
     if (window.innerWidth < 768) return;
 
     const input = document.getElementById('member-search').value.toLowerCase();
-    const allCards = document.querySelectorAll('.glass-panel[onclick*="openBioModalByName"]');
+    const allCards = document.querySelectorAll('.member-card[onclick*="openBioModalByName"]');
     let firstMatch = null;
 
     allCards.forEach(card => {
-        const nameEl = card.querySelector('h3, h4, h5');
+        const nameEl = card.querySelector('h3, h4, h5, p');
         if (!nameEl) return;
         const match = nameEl.innerText.toLowerCase().includes(input);
 
         if (input === "") {
             card.style.opacity = "1";
             card.style.filter = "none";
+            card.style.outline = "none";
         } else if (match) {
             card.style.opacity = "1";
-            card.style.filter = "drop-shadow(0 0 15px rgba(220,38,38,0.8))";
+            card.style.filter = "none";
+            card.style.outline = "4px solid var(--shadow-hi-c)";
+            card.style.outlineOffset = "4px";
             if (!firstMatch) firstMatch = card;
         } else {
-            card.style.opacity = "0.1";
+            card.style.opacity = "0.25";
             card.style.filter = "grayscale(100%)";
+            card.style.outline = "none";
         }
     });
 
@@ -1696,36 +1887,32 @@ function openDaftarModal(folderName) {
 
     const container = document.getElementById('dynamic-inputs-container');
     let htmlInputs = '';
-    
+
     if (lomba.formFields) {
         lomba.formFields.forEach(field => {
             const widthClass = field.halfWidth ? 'w-full md:w-[48%] md:mr-[2%]' : 'w-full';
-            
-            // --- LOGIKA BARU BUAT RENDER INPUT ---
+
             let inputElement = '';
-            
+
             if (field.type === 'select') {
-                // Render Dropdown
                 let optionsHtml = field.options.map(opt => `<option value="${opt.value}">${opt.label}</option>`).join('');
                 inputElement = `
-                    <select id="dyn_${field.id}" data-label="${field.label}" required class="dyn-input w-full bg-black/50 border border-gray-700 rounded-xl px-4 py-3 text-white text-sm focus:border-red-500 outline-none transition-all cursor-pointer appearance-none">
+                    <select id="dyn_${field.id}" data-label="${field.label}" required class="dyn-input rt-input">
                         <option value="" disabled selected>-- Pilih ${field.label} --</option>
                         ${optionsHtml}
                     </select>`;
             } else if (field.type === 'textarea') {
-                // Render Textarea (buat motivasi)
                 inputElement = `
-                    <textarea id="dyn_${field.id}" data-label="${field.label}" required placeholder="${field.placeholder}" rows="3" class="dyn-input w-full bg-black/50 border border-gray-700 rounded-xl px-4 py-3 text-white text-sm focus:border-red-500 outline-none transition-all placeholder:text-gray-600 resize-none"></textarea>`;
+                    <textarea id="dyn_${field.id}" data-label="${field.label}" required placeholder="${field.placeholder}" rows="3" class="dyn-input rt-input resize-none"></textarea>`;
             } else {
-                // Render Input biasa (text, tel, dll)
-                const requiredAttr = field.isRequired === false ? '' : 'required'; // Cek apakah wajib diisi
+                const requiredAttr = field.isRequired === false ? '' : 'required';
                 inputElement = `
-                    <input type="${field.type}" id="dyn_${field.id}" data-label="${field.label}" ${requiredAttr} placeholder="${field.placeholder}" class="dyn-input w-full bg-black/50 border border-gray-700 rounded-xl px-4 py-3 text-white text-sm focus:border-red-500 outline-none transition-all placeholder:text-gray-600">`;
+                    <input type="${field.type}" id="dyn_${field.id}" data-label="${field.label}" ${requiredAttr} placeholder="${field.placeholder}" class="dyn-input rt-input">`;
             }
 
             htmlInputs += `
             <div class="${widthClass} mb-4">
-                <label class="block text-gray-400 text-[10px] font-bold mb-1 uppercase tracking-widest">${field.label}</label>
+                <label class="block text-ink text-xs font-bold mb-1 uppercase tracking-widest">${field.label}</label>
                 ${inputElement}
             </div>`;
         });
@@ -1745,14 +1932,14 @@ function openDaftarModal(folderName) {
     }
 
     const modal = document.getElementById('daftar-modal');
-    const panel = modal.querySelector('.glass-panel');
+    const panel = modal.querySelector('.daftar-panel');
     modal.classList.add('active');
     setTimeout(() => panel.classList.replace('scale-95', 'scale-100'), 10);
 }
 
 function closeDaftarModal() {
     const modal = document.getElementById('daftar-modal');
-    const panel = modal.querySelector('.glass-panel');
+    const panel = modal.querySelector('.daftar-panel');
     panel.classList.replace('scale-100', 'scale-95');
     setTimeout(() => {
         modal.classList.remove('active');
@@ -1844,7 +2031,7 @@ if (fileInputDaftar) {
         if (e.target.files.length > 0) {
             const file = e.target.files[0];
             const sizeKB = (file.size / 1024).toFixed(0);
-            display.innerHTML = `<span class="text-white font-bold">${file.name}</span> <br> <span class="text-[10px] text-red-400">(${sizeKB} KB)</span>`;
+            display.innerHTML = `<span class="font-bold">${file.name}</span> <br> <span class="text-[10px] text-brick font-semibold">(${sizeKB} KB)</span>`;
         } else {
             display.innerText = "Klik untuk memilih file";
         }

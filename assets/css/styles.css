@@ -1,53 +1,162 @@
+/* ==========================================================
+   HMPS KPI 2026 - RED RETRO MOTOWN / VINYL EDITORIAL THEME (+ ORNAMEN)
+   ----------------------------------------------------------
+   Palet:
+     Cherry Red : #810100  (129 / 1 / 0)    -> latar dominan
+     Maroon     : #630000  (99 / 0 / 0)     -> kartu, panel, modal
+     Cotton     : #edebdd  (237 / 235 / 221)-> teks, garis kontur, highlight
+     Noir Black : #1b1717  (27 / 23 / 23)   -> kontras, navbar, shadow
+   Light mode (default): dominan Cherry Red + Maroon
+   Dark mode : <html data-theme="dark"> dominan Noir Black,
+               Maroon / Cherry Red hanya sebagai aksen
+
+   Semua warna tema dipegang CSS variable (format "R G B"
+   supaya Tailwind bisa pakai modifier opacity, mis. bg-paper/50).
+   ========================================================== */
+:root {
+    --bg: 129 1 0;            /* Cherry Red - latar halaman */
+    --surface: 99 0 0;        /* Maroon - kartu / panel / modal (bg-paper) */
+    --surface2: 112 0 0;      /* Maroon terang - panel kedua (bg-cream) */
+    --input: 66 0 0;          /* isi input */
+    --line: 237 235 221;      /* Cotton - garis kontur */
+    --on: 237 235 221;        /* Cotton - teks utama */
+    --hl: 237 235 221;        /* aksen teks */
+    --coral: 237 235 221;     /* highlight (bg-mustard) = Cotton */
+    --btn: 237 235 221;       /* tombol utama */
+    --btn-fg: 27 23 23;
+    --shadow: 27 23 23;       /* hard shadow standar (Noir) */
+    --shadow-hi: 237 235 221; /* hard shadow aksen */
+    --brick: 27 23 23;        /* Tailwind "brick" = blok kontras */
+    --espresso: 27 23 23;     /* navbar / footer */
+    --dots: 27 23 23;
+    --dots-a: 0.16;
+
+    /* versi warna penuh (dipakai di class arbitrary Tailwind) */
+    --shadow-c: rgb(27 23 23);
+    --shadow-hi-c: rgb(237 235 221);
+}
+
+:root[data-theme="dark"] {
+    --bg: 27 23 23;           /* Noir Black - latar */
+    --surface: 44 14 14;      /* Noir kemerahan - kartu / panel */
+    --surface2: 54 16 16;
+    --input: 14 10 10;
+    --line: 237 235 221;
+    --on: 237 235 221;
+    --hl: 237 235 221;
+    --coral: 237 235 221;
+    --btn: 129 1 0;           /* Cherry Red hanya sebagai aksen */
+    --btn-fg: 237 235 221;
+    --shadow: 99 0 0;         /* Maroon */
+    --shadow-hi: 129 1 0;
+    --brick: 129 1 0;
+    --espresso: 14 10 10;
+    --dots: 237 235 221;
+    --dots-a: 0.05;
+
+    --shadow-c: rgb(99 0 0);
+    --shadow-hi-c: rgb(129 1 0);
+}
+
 /* ==========================================
    BASE
    ========================================== */
+html { scroll-behavior: smooth; color-scheme: light; }
+html[data-theme="dark"] { color-scheme: dark; }
+
 body {
-    background-color: #0a0000;
-    color: #e5e5e5;
+    background-color: rgb(var(--bg));
+    color: rgb(var(--on));
     overflow-x: hidden;
-    scroll-behavior: smooth;
     -webkit-font-smoothing: antialiased;
+    letter-spacing: 0.02em;
     -webkit-user-select: none;
     -ms-user-select: none;
     user-select: none;
+    transition: background-color 0.35s ease, color 0.35s ease;
 }
 
-html { scroll-behavior: smooth; }
+/* Safari: user-select:none di body bisa bikin input tidak bisa diketik */
+input, textarea, select {
+    -webkit-user-select: text;
+    user-select: text;
+}
 
-::-webkit-scrollbar { width: 8px; }
-::-webkit-scrollbar-track { background: #1a0505; }
-::-webkit-scrollbar-thumb { background: #8a0000; border-radius: 4px; }
-::-webkit-scrollbar-thumb:hover { background: #ff1f1f; }
+::selection { background: #1b1717; color: #edebdd; }
+
+::-webkit-scrollbar { width: 10px; }
+::-webkit-scrollbar-track { background: rgb(var(--bg)); border-left: 2px solid rgb(var(--line)); }
+::-webkit-scrollbar-thumb { background: #1b1717; border: 2px solid rgb(var(--line)); }
+::-webkit-scrollbar-thumb:hover { background: rgb(var(--coral)); }
+
+.custom-scrollbar::-webkit-scrollbar { width: 8px; height: 8px; }
+.custom-scrollbar::-webkit-scrollbar-track { background: rgb(var(--surface)); }
+.custom-scrollbar::-webkit-scrollbar-thumb { background: rgb(var(--line)); border: 2px solid rgb(var(--surface)); }
+
+/* Lapisan halftone tipis di belakang semua konten */
+.halftone-bg {
+    position: fixed; inset: 0; z-index: -1; pointer-events: none;
+    background-image: radial-gradient(rgb(var(--dots) / var(--dots-a)) 1px, transparent 1px);
+    background-size: 6px 6px;
+}
+
+/* Overlay titik halftone untuk foto */
+.halftone {
+    background-image: radial-gradient(#1b1717 1px, transparent 1px);
+    background-size: 5px 5px;
+    opacity: 0.22;
+    pointer-events: none;
+}
 
 /* ==========================================
-   GLASS PANEL
+   OVERRIDE UTILITY TAILWIND (supaya class lama ikut tema)
+   Prefix "html" dipakai untuk menaikkan specificity di atas
+   style yang di-generate Tailwind CDN saat runtime.
    ========================================== */
-.glass-panel {
-    background: rgba(40, 0, 0, 0.6);
-    border: 1px solid rgba(255, 50, 50, 0.1);
-    box-shadow: 0 4px 30px rgba(0, 0, 0, 0.5);
-    transform: translateZ(0);
-    -webkit-transform: translateZ(0);
-    -webkit-tap-highlight-color: transparent;
-    user-select: none;
+/* garis kontur = cream (spek palet), hover:border-* tetap menang */
+html .border-ink { border-color: rgb(var(--line)); }
+
+/* teks "ink" lama -> teks cream di permukaan gelap */
+html .text-ink { color: rgb(var(--on)); }
+html [class*="text-ink/"] { color: rgb(var(--on) / 0.8); }
+html .text-espresso { color: rgb(var(--hl)); }
+
+/* blok coral (bg-mustard) selalu pakai teks gelap */
+:where(.bg-mustard) { color: #1b1717; }
+html .bg-mustard { color: #1b1717; }
+html .bg-mustard .text-ink,
+html .bg-mustard.text-ink { color: #1b1717; }
+
+/* aksen teks merah lama -> peach (terbaca di latar merah & gelap) */
+html body .text-brick,
+html body .hover\:text-brick:hover { color: rgb(var(--hl)); }
+html body .bg-mustard .text-brick,
+html body .bg-mustard.text-brick { color: #630000; }
+
+/* bg-cream = permukaan kedua */
+html .bg-cream { background-color: rgb(var(--surface2)); }
+
+/* heading: kata beraksen dapat hard shadow */
+html body :is(h1, h2, h3) > .text-brick,
+html body :is(h1, h2, h3) .text-brick {
+    text-shadow: 3px 3px 0 rgb(var(--shadow));
 }
 
-@media (min-width: 768px) {
-    .glass-panel {
-        background: rgba(40, 0, 0, 0.4);
-        backdrop-filter: blur(12px);
-        -webkit-backdrop-filter: blur(12px);
-    }
-}
+/* Dropdown user: hover coral -> teks gelap */
+html #user-dropdown :is(a, button):hover { color: #1b1717; }
+html #user-dropdown :is(a, button):hover .text-brick { color: #630000; }
 
 /* ==========================================
    INTRO SCREEN
    ========================================== */
 #intro-screen {
     position: fixed; top: 0; left: 0; width: 100%; height: 100%;
-    background: linear-gradient(135deg, #000000, #2b0000);
+    background-color: rgb(var(--espresso));
+    background-image: radial-gradient(rgba(237, 235, 221, 0.12) 1.5px, transparent 1.5px);
+    background-size: 14px 14px;
     z-index: 9999; display: flex; justify-content: center; align-items: center;
-    flex-direction: column; transition: transform 0.8s ease-in-out, opacity 0.8s ease-in-out;
+    flex-direction: column;
+    transition: transform 0.8s ease-in-out, opacity 0.8s ease-in-out;
     will-change: transform, opacity;
 }
 
@@ -63,11 +172,275 @@ html { scroll-behavior: smooth; }
 }
 
 /* ==========================================
-   TYPING & NEON
+   TYPING
    ========================================== */
 .typing-cursor::after { content: '|'; animation: blink 1s infinite; }
 @keyframes blink { 0%, 100% { opacity: 1; } 50% { opacity: 0; } }
-.neon-text { text-shadow: 0 0 5px #ff0000, 0 0 10px #ff0000, 0 0 20px #8a0000; }
+
+/* ==========================================
+   KOMPONEN RETRO (dipakai di HTML & template JS)
+   ========================================== */
+
+/* Kartu: border cream tebal + hard shadow */
+.rt-card {
+    border: 4px solid rgb(var(--line));
+    box-shadow: 6px 6px 0 rgb(var(--shadow));
+    border-radius: 0;
+    color: rgb(var(--on));
+    transition: transform 0.2s ease, box-shadow 0.2s ease, background-color 0.35s ease;
+}
+:where(.rt-card) { background: rgb(var(--surface)); }
+
+/* Kartu anggota (klik -> bio). Class ini juga dipakai filterMembers() di JS */
+.member-card {
+    border: 4px solid rgb(var(--line));
+    box-shadow: 5px 5px 0 rgb(var(--shadow));
+    border-radius: 0;
+    color: rgb(var(--on));
+    cursor: pointer;
+    position: relative;
+    transition: transform 0.2s ease, box-shadow 0.2s ease, opacity 0.3s ease;
+}
+:where(.member-card) { background: rgb(var(--surface)); }
+.member-card:hover { box-shadow: 8px 8px 0 rgb(var(--shadow-hi)); }
+
+/* Tombol */
+.rt-btn {
+    display: inline-flex; align-items: center; justify-content: center; gap: 0.5rem;
+    font-weight: 700; text-transform: uppercase; letter-spacing: 0.15em; font-size: 0.875rem;
+    padding: 0.75rem 1.5rem; border: 4px solid rgb(var(--line)); border-radius: 0;
+    box-shadow: 4px 4px 0 rgb(var(--shadow)); cursor: pointer;
+    transition: transform 0.15s ease, box-shadow 0.15s ease, background-color 0.15s ease, color 0.15s ease;
+}
+.rt-btn:hover { transform: translate(2px, 2px); box-shadow: 2px 2px 0 rgb(var(--shadow)); }
+.rt-btn:active { transform: translate(4px, 4px); box-shadow: 0 0 0 rgb(var(--shadow)); }
+.rt-btn:disabled { opacity: 0.5; cursor: not-allowed; transform: none; box-shadow: 4px 4px 0 rgb(var(--shadow)); }
+
+.rt-btn-red { background: rgb(var(--btn)); color: rgb(var(--btn-fg)); }
+.rt-btn-red:hover { background: #810100; color: #edebdd; }
+.rt-btn-ink { background: #1b1717; color: #edebdd; }
+.rt-btn-ink:hover { background: rgb(var(--coral)); color: #1b1717; }
+.rt-btn-paper { background: rgb(var(--surface)); color: rgb(var(--on)); }
+.rt-btn-paper:hover { background: rgb(var(--coral)); color: #1b1717; }
+.rt-btn-mustard { background: rgb(var(--coral)); color: #1b1717; }
+.rt-btn-mustard:hover { background: #edebdd; color: #1b1717; }
+.rt-btn-green { background: #2F6B3A; color: #edebdd; }
+.rt-btn-green:hover { background: rgb(var(--coral)); color: #1b1717; }
+
+/* Input / select / textarea */
+.rt-input {
+    width: 100%; border: 3px solid rgb(var(--line)); border-radius: 0;
+    padding: 0.7rem 0.9rem; font-size: 1rem; color: rgb(var(--on)); outline: none;
+    transition: box-shadow 0.15s ease, transform 0.15s ease;
+}
+:where(.rt-input) { background: rgb(var(--input)); }
+.rt-input:focus { box-shadow: 4px 4px 0 rgb(var(--shadow-hi)); transform: translate(-2px, -2px); }
+.rt-input::placeholder { color: rgba(237, 235, 221, 0.5); }
+select.rt-input {
+    appearance: none; -webkit-appearance: none; cursor: pointer; padding-right: 2.2rem;
+    background-image: url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 10 6'><path d='M0 0l5 6 5-6z' fill='%23edebdd'/></svg>");
+    background-repeat: no-repeat; background-position: right 0.8rem center; background-size: 12px;
+}
+select.rt-input option { background: rgb(var(--input)); color: #edebdd; }
+
+/* Label tiket kecil "No. 01" */
+.rt-ticket {
+    display: inline-block; background: #1b1717; color: #edebdd;
+    border: 2px solid rgb(var(--line));
+    font-size: 0.7rem; font-weight: 600; letter-spacing: 0.2em; text-transform: uppercase;
+    padding: 0.15rem 0.6rem;
+}
+
+/* Divider ★ - - - ★ */
+.star-divider { display: flex; align-items: center; gap: 0.75rem; color: rgb(var(--hl)); font-size: 1.4rem; line-height: 1; }
+.star-divider::before, .star-divider::after { content: ''; flex: 1; border-top: 4px dashed rgb(var(--line)); }
+
+/* Tempelan: lakban, staples, sticker, stempel (semua non-interaktif) */
+.tape {
+    position: absolute; pointer-events: none; z-index: 10;
+    width: 5rem; height: 1.5rem;
+    background: rgba(237, 235, 221, 0.9);
+    border: 1px solid rgba(27, 23, 23, 0.35);
+}
+.staple {
+    position: absolute; pointer-events: none; z-index: 20;
+    width: 28px; height: 7px; background: #B9B4A8; border: 2px solid #1b1717;
+}
+.sticker {
+    display: grid; place-items: center; border-radius: 9999px;
+    color: #edebdd;
+    border: 2px solid rgb(var(--line)); box-shadow: 2px 2px 0 rgb(var(--shadow-hi));
+    font-family: 'Alfa Slab One', serif; pointer-events: none;
+}
+:where(.sticker) { background: #1b1717; }
+.stamp {
+    border: 3px solid rgb(var(--hl)); outline: 2px solid rgb(var(--hl)); outline-offset: 2px;
+    color: rgb(var(--hl)); background: rgba(27, 23, 23, 0.55);
+    font-family: 'Alfa Slab One', serif; text-transform: uppercase; letter-spacing: 0.15em;
+    pointer-events: none; opacity: 0.95;
+}
+
+/* Piringan vinyl */
+.vinyl {
+    position: relative; flex-shrink: 0; border-radius: 9999px; border: 4px solid rgb(var(--line));
+    background:
+        conic-gradient(from 0deg, transparent 0 20%, rgba(237, 235, 221, 0.20) 25%, transparent 30% 70%, rgba(237, 235, 221, 0.20) 75%, transparent 80%),
+        repeating-radial-gradient(circle at center, #1b1717 0 3px, #2b2424 3px 4px);
+}
+.vinyl::before {
+    content: '★'; position: absolute; inset: 30%; border-radius: 9999px;
+    background: rgb(var(--coral)); border: 3px solid #1b1717;
+    display: grid; place-items: center; color: #1b1717; font-size: 0.8rem; line-height: 1;
+}
+.vinyl::after {
+    content: ''; position: absolute; inset: 47%; border-radius: 9999px; background: #edebdd;
+}
+.vinyl-spin { animation: vinylSpin 8s linear infinite; }
+@keyframes vinylSpin { to { transform: rotate(360deg); } }
+
+/* Marquee strip */
+.marquee-track { display: flex; width: max-content; animation: marquee 40s linear infinite; }
+.marquee-group { display: flex; flex-shrink: 0; }
+.marquee-group span { padding: 0 1.25rem; white-space: nowrap; }
+@keyframes marquee { from { transform: translateX(0); } to { transform: translateX(-50%); } }
+
+/* ==========================================
+   TEKS DISPLAY: OUTLINE (gaya poster "MOTOWN RECORDS")
+   ========================================== */
+.outline-text {
+    color: transparent;
+    -webkit-text-stroke: 3px rgb(var(--line));
+    text-shadow: 6px 6px 0 rgb(var(--shadow));
+    paint-order: stroke fill;
+}
+.fill-text {
+    color: rgb(var(--on));
+    text-shadow: 6px 6px 0 rgb(var(--shadow));
+}
+@media (max-width: 640px) {
+    .outline-text { -webkit-text-stroke: 2px rgb(var(--line)); text-shadow: 4px 4px 0 rgb(var(--shadow)); }
+    .fill-text { text-shadow: 4px 4px 0 rgb(var(--shadow)); }
+}
+
+/* ==========================================
+   TURNTABLE (piringan hitam + tonearm)
+   ========================================== */
+.turntable { width: 100%; max-width: 26rem; margin-inline: auto; }
+.tt-plinth {
+    position: relative; aspect-ratio: 1 / 0.9;
+    background: #1b1717; border: 4px solid rgb(var(--line));
+    box-shadow: 10px 10px 0 rgb(var(--shadow-hi));
+}
+.tt-plinth::before { /* tekstur halftone di bodi turntable */
+    content: ''; position: absolute; inset: 0; pointer-events: none;
+    background-image: radial-gradient(rgba(237, 235, 221, 0.08) 1px, transparent 1px);
+    background-size: 6px 6px;
+}
+.tt-platter {
+    position: absolute; left: 6%; top: 50%; transform: translateY(-50%);
+    width: 68%; aspect-ratio: 1; border-radius: 9999px;
+    background: #0d0d0d; border: 4px solid rgb(var(--line));
+}
+.tt-platter .vinyl { position: absolute; inset: 5%; width: auto; height: auto; animation-play-state: paused; }
+.turntable.is-playing .tt-platter .vinyl { animation-play-state: running; }
+.tt-arm {
+    position: absolute; top: 9%; right: 9%; width: 10px; height: 58%;
+    background: rgb(var(--line)); border: 2px solid #1b1717;
+    transform-origin: 50% 6px; transform: rotate(0deg);
+    transition: transform 1s cubic-bezier(.5, 0, .2, 1);
+}
+.tt-arm::before { /* poros */
+    content: ''; position: absolute; top: -14px; left: 50%; width: 28px; height: 28px;
+    transform: translateX(-50%); border-radius: 9999px;
+    background: rgb(var(--coral)); border: 3px solid rgb(var(--line));
+}
+.tt-arm::after { /* kepala jarum */
+    content: ''; position: absolute; bottom: -12px; left: 50%; width: 18px; height: 16px;
+    transform: translateX(-50%) rotate(8deg);
+    background: rgb(var(--coral)); border: 3px solid rgb(var(--line));
+}
+.turntable.is-playing .tt-arm { transform: rotate(24deg); }
+.tt-label {
+    position: absolute; left: 8px; bottom: 8px; right: 8px;
+    display: flex; justify-content: space-between; align-items: center; gap: .5rem;
+    font-family: 'Alfa Slab One', serif; font-size: .65rem; letter-spacing: .15em; text-transform: uppercase;
+    color: rgb(var(--line));
+}
+.tt-led {
+    width: 10px; height: 10px; border-radius: 9999px; border: 2px solid rgb(var(--line));
+    background: #3a2a2a; flex-shrink: 0;
+}
+.turntable.is-playing .tt-led { background: rgb(var(--coral)); box-shadow: 0 0 8px rgb(var(--coral)); }
+.tt-title { white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+
+/* ==========================================
+   TRACKLIST (setlist proker)
+   ========================================== */
+.track-list { border: 4px solid rgb(var(--line)); background: rgb(var(--surface)); box-shadow: 8px 8px 0 rgb(var(--shadow)); }
+.track-row {
+    display: flex; align-items: center; gap: 1rem; padding: 0.95rem 1.1rem;
+    border-bottom: 3px dashed rgb(var(--line) / 0.45); cursor: pointer;
+    transition: background-color 0.15s ease, color 0.15s ease, transform 0.15s ease;
+}
+.track-row:last-child { border-bottom: 0; }
+.track-row:hover, .track-row.is-active { background: rgb(var(--coral)); color: #1b1717; }
+.track-row:hover { transform: translateX(4px); }
+.track-no { font-family: 'Alfa Slab One', serif; font-size: 1.15rem; min-width: 2.2ch; opacity: 0.7; }
+.track-title { font-weight: 600; text-transform: uppercase; letter-spacing: 0.06em; line-height: 1.2; }
+.track-sub { font-size: 0.75rem; opacity: 0.85; margin-top: 2px; }
+.track-badge {
+    display: inline-block; font-size: 0.6rem; font-weight: 700; letter-spacing: 0.15em; text-transform: uppercase;
+    padding: 1px 6px; border: 2px solid currentColor; margin-left: 0.5rem; vertical-align: middle;
+}
+.track-play {
+    width: 2.5rem; height: 2.5rem; border-radius: 9999px; flex-shrink: 0;
+    display: grid; place-items: center; font-size: 0.8rem;
+    background: rgb(var(--btn)); color: rgb(var(--btn-fg));
+    border: 3px solid rgb(var(--line)); box-shadow: 2px 2px 0 rgb(var(--shadow));
+    transition: transform 0.15s ease, background-color 0.15s ease, color 0.15s ease;
+}
+.track-play:hover { transform: scale(1.1); }
+.track-row:hover .track-play, .track-row.is-active .track-play { background: #1b1717; color: #edebdd; }
+
+/* ==========================================
+   NOW PLAYING PILL + SCROLL PROGRESS
+   ========================================== */
+.now-playing {
+    position: fixed; left: 12px; bottom: 12px; z-index: 60;
+    display: flex; align-items: center; gap: 0.6rem;
+    padding: 0.3rem 0.85rem 0.3rem 0.3rem;
+    background: #1b1717; color: #edebdd;
+    border: 3px solid rgb(var(--line)); box-shadow: 4px 4px 0 rgb(var(--shadow-hi));
+    cursor: pointer; transition: transform 0.15s ease, box-shadow 0.15s ease;
+}
+.now-playing:hover { transform: translate(2px, 2px); box-shadow: 2px 2px 0 rgb(var(--shadow-hi)); }
+.np-vinyl { width: 34px; height: 34px; border-width: 2px; animation-play-state: paused; }
+.np-vinyl::before { font-size: 0.35rem; border-width: 2px; }
+.now-playing.is-playing .np-vinyl { animation-play-state: running; }
+.np-text { line-height: 1.1; min-width: 0; max-width: 11rem; }
+.np-title-line { white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.np-eq { display: flex; align-items: flex-end; gap: 2px; height: 14px; }
+.np-eq i { display: block; width: 3px; background: rgb(var(--coral)); height: 30%; animation: eq 0.9s ease-in-out infinite; animation-play-state: paused; }
+.np-eq i:nth-child(2) { animation-delay: -0.3s; }
+.np-eq i:nth-child(3) { animation-delay: -0.6s; }
+.now-playing.is-playing .np-eq i { animation-play-state: running; }
+@keyframes eq { 0%, 100% { height: 25%; } 50% { height: 100%; } }
+@media (max-width: 640px) {
+    .now-playing { padding-right: 0.5rem; }
+    .np-text { display: none; }
+}
+
+#scroll-progress {
+    position: fixed; top: 0; left: 0; height: 4px; width: 0%;
+    background: rgb(var(--coral)); z-index: 70; pointer-events: none;
+    box-shadow: 0 1px 0 #1b1717;
+}
+
+/* Tombol tema: ikon bulan/matahari */
+#theme-btn .icon-sun { display: none; }
+#theme-btn .icon-moon { display: inline; }
+html[data-theme="dark"] #theme-btn .icon-sun { display: inline; }
+html[data-theme="dark"] #theme-btn .icon-moon { display: none; }
 
 /* ==========================================
    TREE (struktur organisasi)
@@ -75,55 +448,69 @@ html { scroll-behavior: smooth; }
 .tree { display: flex; justify-content: center; }
 .tree ul { padding-top: 20px; position: relative; transition: all 0.5s; display: flex; justify-content: center; pointer-events: none; }
 .tree li { float: left; text-align: center; list-style-type: none; position: relative; padding: 20px 5px 0 5px; transition: all 0.5s; }
-.tree li::before, .tree li::after { content: ''; position: absolute; top: 0; right: 50%; border-top: 2px solid #8a0000; width: 50%; height: 20px; }
-.tree li::after { right: auto; left: 50%; border-left: 2px solid #8a0000; }
+.tree li::before, .tree li::after { content: ''; position: absolute; top: 0; right: 50%; border-top: 3px solid rgb(var(--line)); width: 50%; height: 20px; }
+.tree li::after { right: auto; left: 50%; border-left: 3px solid rgb(var(--line)); }
 .tree li:only-child::after, .tree li:only-child::before { display: none; }
 .tree li:only-child { padding-top: 0; }
 .tree li:first-child::before, .tree li:last-child::after { border: 0 none; }
-.tree li:last-child::before { border-right: 2px solid #8a0000; border-radius: 0 5px 0 0; }
-.tree li:first-child::after { border-radius: 5px 0 0 0; }
-.tree ul ul::before { content: ''; position: absolute; top: 0; left: 50%; border-left: 2px solid #8a0000; width: 0; height: 20px; }
+.tree li:last-child::before { border-right: 3px solid rgb(var(--line)); }
+.tree ul ul::before { content: ''; position: absolute; top: 0; left: 50%; border-left: 3px solid rgb(var(--line)); width: 0; height: 20px; }
 .tree li > div { pointer-events: auto; }
 
 /* ==========================================
    FULLSCREEN OVERLAY (family gallery)
+   - transform: none saat open supaya tombol close (fixed) tetap nempel di layar
    ========================================== */
 .fullscreen-overlay {
     position: fixed; top: 0; left: 0; width: 100%; height: 100%;
-    background: rgba(10, 0, 0, 0.95); z-index: 100; overflow-y: auto;
-    transform: scale(0.9); opacity: 0; pointer-events: none;
-    transition: transform 0.3s ease, opacity 0.3s ease; will-change: transform, opacity;
+    background: rgb(var(--bg) / 0.98);
+    background-image: radial-gradient(rgb(var(--dots) / var(--dots-a)) 1px, transparent 1px);
+    background-size: 6px 6px;
+    z-index: 100; overflow-y: auto;
+    transform: scale(0.95); opacity: 0; pointer-events: none;
+    transition: transform 0.3s ease, opacity 0.3s ease;
 }
-.fullscreen-overlay.open { transform: scale(1); opacity: 1; pointer-events: auto; }
+.fullscreen-overlay.open { transform: none; opacity: 1; pointer-events: auto; }
 .fullscreen-overlay:focus { outline: none; }
 
 /* ==========================================
-   MODAL
+   MODAL (z-index aman di atas navbar, overlay, admin button)
    ========================================== */
 .custom-modal {
     position: fixed; top: 0; left: 0; width: 100%; height: 100%;
-    background: rgba(0, 0, 0, 0.9); z-index: 200; display: flex;
+    background: rgba(14, 4, 4, 0.88); z-index: 9999; display: flex;
     justify-content: center; align-items: center; opacity: 0;
     pointer-events: none; transition: opacity 0.3s; will-change: opacity;
 }
 .custom-modal.active { opacity: 1; pointer-events: auto; }
-#bio-content:focus { outline: none; }
+#bio-content:focus, #news-content:focus { outline: none; }
+
+/* Isi artikel di modal berita */
+#news-modal-body ul { list-style: square; padding-left: 1.25rem; }
+#news-modal-body strong { font-weight: 700; }
+#news-modal-body p, #news-modal-body li { line-height: 1.7; }
 
 /* ==========================================
    BIO INFO ROW
    ========================================== */
-.bio-info-row { display: flex; align-items: flex-start; gap: 1.25rem; padding: 0.5rem 0; transition: background-color 0.3s; }
-.bio-icon-box { flex-shrink: 0; width: 3rem; height: 3rem; border-radius: 50%; background: rgba(127, 29, 29, 0.2); display: flex; align-items: center; justify-content: center; color: #ef4444; font-size: 1.25rem; border: 1px solid rgba(239, 68, 68, 0.1); transition: transform 0.3s, background-color 0.3s, color 0.3s; }
-.bio-info-row:hover .bio-icon-box { background: #dc2626; color: white; transform: scale(1.1); box-shadow: 0 0 15px rgba(220, 38, 38, 0.4); }
+.bio-info-row { display: flex; align-items: flex-start; gap: 1.25rem; padding: 0.5rem 0; }
+.bio-icon-box {
+    flex-shrink: 0; width: 3rem; height: 3rem; border-radius: 0;
+    background: rgb(var(--coral)); color: #1b1717;
+    display: flex; align-items: center; justify-content: center; font-size: 1.25rem;
+    border: 3px solid rgb(var(--line)); box-shadow: 3px 3px 0 rgb(var(--shadow));
+    transition: transform 0.2s, background-color 0.2s, color 0.2s;
+}
+.bio-info-row:hover .bio-icon-box { background: #1b1717; color: #edebdd; transform: rotate(-6deg) scale(1.05); }
 
 /* ==========================================
    MUSIC PULSE
    ========================================== */
 .music-pulse { animation: musicPulse 1.5s infinite; }
 @keyframes musicPulse {
-    0% { box-shadow: 0 0 0 0 rgba(220, 38, 38, 0.7); }
-    70% { box-shadow: 0 0 0 10px rgba(220, 38, 38, 0); }
-    100% { box-shadow: 0 0 0 0 rgba(220, 38, 38, 0); }
+    0% { box-shadow: 0 0 0 0 rgba(237, 235, 221, 0.85); }
+    70% { box-shadow: 0 0 0 10px rgba(237, 235, 221, 0); }
+    100% { box-shadow: 0 0 0 0 rgba(237, 235, 221, 0); }
 }
 
 /* ==========================================
@@ -131,31 +518,33 @@ html { scroll-behavior: smooth; }
    ========================================== */
 .play-overlay {
     position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%);
-    width: 60px; height: 60px; background: rgba(220, 38, 38, 0.85); border-radius: 50%;
-    display: flex; align-items: center; justify-content: center; color: white;
-    font-size: 24px; transition: transform 0.3s, background-color 0.3s;
-    box-shadow: 0 0 25px rgba(220, 38, 38, 0.6); z-index: 10;
+    width: 60px; height: 60px; background: rgb(var(--coral)); border: 4px solid #1b1717;
+    border-radius: 50%; display: flex; align-items: center; justify-content: center;
+    color: #1b1717; font-size: 22px; box-shadow: 3px 3px 0 #1b1717;
+    transition: transform 0.2s, background-color 0.2s, color 0.2s; z-index: 10; pointer-events: none;
 }
-.group:hover .play-overlay { background: rgba(255, 255, 255, 0.95); color: #dc2626; transform: translate(-50%, -50%) scale(1.15); }
+.group:hover .play-overlay { background: #edebdd; color: #1b1717; transform: translate(-50%, -50%) scale(1.12); }
 
 /* ==========================================
-   IMG LOADING
+   IMG LOADING (bio modal)
    ========================================== */
 .img-loading-skeleton {
-    position: absolute; inset: 0; background-color: #1f2937;
-    animation: pulse 2s cubic-bezier(0.4, 0, 0.6, 1) infinite;
+    position: absolute; inset: 0; background-color: rgb(var(--coral));
+    animation: rtPulse 1.6s ease-in-out infinite;
     display: flex; align-items: center; justify-content: center; z-index: 0;
 }
+.img-loading-skeleton i { color: #1b1717; }
+@keyframes rtPulse { 0%, 100% { opacity: 1; } 50% { opacity: 0.6; } }
 .img-loaded { opacity: 1 !important; }
 
 /* ==========================================
    TOAST
    ========================================== */
 .toast-msg {
-    position: fixed; top: 80px; right: 20px; background: #1a0505;
-    border: 1px solid #8a0000; color: white; padding: 12px 24px;
-    border-radius: 8px; z-index: 10000; font-size: 14px;
-    box-shadow: 0 10px 30px rgba(0, 0, 0, 0.5); animation: slideIn 0.3s ease forwards;
+    position: fixed; top: 84px; right: 16px; background: rgb(var(--surface));
+    border: 4px solid rgb(var(--line)); color: rgb(var(--on)); padding: 12px 20px;
+    z-index: 10050; font-size: 14px; font-weight: 600;
+    box-shadow: 5px 5px 0 rgb(var(--shadow-hi)); animation: slideIn 0.3s ease forwards;
 }
 @keyframes slideIn {
     from { transform: translateX(100%); opacity: 0; }
@@ -180,4 +569,203 @@ html { scroll-behavior: smooth; }
     .division-block { width: 100% !important; overflow-x: hidden !important; }
 }
 
-.md\:hidden .glass-panel { scroll-margin-top: 100px; }
+/* ==========================================================
+   ORNAMEN RETRO (starburst, washi tape, torn paper, halftone,
+   zigzag, stempel). SEMUA ornamen non-interaktif:
+   pointer-events: none + user-select: none.
+   ----------------------------------------------------------
+   Cara pakai:
+   - Host (kartu/modal/section) : class "ornament-host"
+     (position: relative + isolation: isolate -> z-index -1
+     di dalamnya aman, selalu di atas background host dan di
+     bawah konten).
+   - Layer pemotong ornamen belakang : <div class="ornament-layer">
+     (inset:0, overflow:hidden, z-index:-1) -> tidak bikin
+     horizontal scroll walau ornamen melewati tepi.
+   - Ornamen depan (tape, stempel, starburst solid) boleh
+     menempel di sudut kartu; tetap pointer-events:none.
+   ========================================================== */
+:root {
+    --orn-edge: 27 23 23;     /* garis luar starburst */
+    --orn-ghost: 27 23 23;    /* isi starburst transparan di belakang judul */
+    --orn-dot: 27 23 23;      /* warna titik halftone */
+    --orn-dot-a: 0.30;
+    --burst: polygon(50.0% 0.0%,58.5% 13.0%,71.7% 5.0%,73.7% 20.3%,89.1% 18.8%,84.2% 33.5%,98.7% 38.9%,88.0% 50.0%,98.7% 61.1%,84.2% 66.5%,89.1% 81.2%,73.7% 79.7%,71.7% 95.0%,58.5% 87.0%,50.0% 100.0%,41.5% 87.0%,28.3% 95.0%,26.3% 79.7%,10.9% 81.2%,15.8% 66.5%,1.3% 61.1%,12.0% 50.0%,1.3% 38.9%,15.8% 33.5%,10.9% 18.8%,26.3% 20.3%,28.3% 5.0%,41.5% 13.0%);
+}
+:root[data-theme="dark"] {
+    --orn-edge: 129 1 0;
+    --orn-ghost: 129 1 0;
+    --orn-dot: 237 235 221;
+    --orn-dot-a: 0.10;
+}
+
+/* ---- dasar: semua ornamen tidak boleh menangkap klik ---- */
+.ornament,
+.ornament-layer,
+.ornament-page-dots,
+.ornament-zigzag,
+.ornament-stripes,
+.stamp-badge,
+.stamp-round {
+    pointer-events: none !important;
+    -webkit-user-select: none;
+    -ms-user-select: none;
+    user-select: none;
+}
+.ornament { position: absolute; }
+:where(.ornament) { z-index: 0; }
+
+.ornament-host { position: relative; isolation: isolate; }
+.ornament-layer { position: absolute; inset: 0; overflow: hidden; z-index: -1; }
+.ornament-content { position: relative; z-index: 10; }   /* konten di atas ornamen */
+
+/* Titik halftone besar di dua sudut layar (di belakang semua konten) */
+.ornament-page-dots { position: fixed; inset: 0; z-index: -1; }
+.ornament-page-dots::before,
+.ornament-page-dots::after {
+    content: ''; position: absolute;
+    width: min(34rem, 60vw); height: min(26rem, 50vh);
+    background-image: radial-gradient(rgb(var(--orn-dot) / 0.34) 30%, transparent 33%);
+    background-size: 14px 14px;
+    -webkit-mask-image: radial-gradient(circle at var(--hx) var(--hy), #000 0, transparent 70%);
+    mask-image: radial-gradient(circle at var(--hx) var(--hy), #000 0, transparent 70%);
+}
+.ornament-page-dots::before { top: 0; left: 0; --hx: 0%; --hy: 0%; }
+.ornament-page-dots::after { bottom: 0; right: 0; --hx: 100%; --hy: 100%; }
+
+/* ---- 1. STARBURST / BADGE ---- */
+:where(.ornament-star) { display: grid; z-index: 5; }
+.ornament-star {
+    --s: 5rem;
+    width: var(--s); height: var(--s);
+    place-items: center; text-align: center;
+    font-family: 'Alfa Slab One', serif; text-transform: uppercase;
+    line-height: 0.95; color: #1b1717;
+    filter: drop-shadow(3px 3px 0 rgb(var(--shadow)));
+}
+.ornament-star::before,
+.ornament-star::after { content: ''; position: absolute; inset: 0; clip-path: var(--burst); }
+.ornament-star::before { background: rgb(var(--orn-edge)); }
+.ornament-star::after { inset: 5%; background: rgb(var(--coral)); }
+.ornament-star > span {
+    position: relative; z-index: 1; max-width: 72%;
+    font-size: calc(var(--s) * 0.2); letter-spacing: 0.02em;
+}
+.ornament-star--sm { --s: 3.2rem; }
+.ornament-star--md { --s: 5rem; }
+.ornament-star--lg { --s: 12rem; }
+.ornament-star--xl { --s: 22rem; }
+/* versi "hantu": transparan, dipakai di belakang judul section */
+.ornament-star--ghost { filter: none; z-index: -1; color: rgb(var(--on)); }
+.ornament-star--ghost::before { background: rgb(var(--line) / 0.22); }
+.ornament-star--ghost::after { background: rgb(var(--orn-ghost) / 0.45); }
+.ornament-star--cotton::before { background: rgb(var(--line) / 0.10); }
+.ornament-star--cotton::after { background: rgb(var(--line) / 0.07); }
+@media (max-width: 640px) {
+    .ornament-star--xl { --s: 15rem; }
+    .ornament-star--lg { --s: 9rem; }
+}
+
+/* ---- 2. WASHI TAPE & TORN PAPER ---- */
+:where(.ornament-tape) { z-index: 10; }
+.ornament-tape {
+    width: 5.5rem; height: 1.6rem;
+    background: rgb(var(--line) / 0.9);
+    clip-path: polygon(0 0, 4% 12%, 0 25%, 4% 38%, 0 50%, 4% 62%, 0 75%, 4% 88%, 0 100%,
+                       100% 100%, 96% 88%, 100% 75%, 96% 62%, 100% 50%, 96% 38%, 100% 25%, 96% 12%, 100% 0);
+}
+.ornament-tape--stripe {
+    background: repeating-linear-gradient(45deg, rgb(var(--line) / 0.95) 0 7px, rgb(var(--orn-edge) / 0.85) 7px 14px);
+}
+.ornament-tape--dots {
+    background:
+        radial-gradient(rgb(27 23 23 / 0.40) 1.5px, transparent 1.7px) 0 0 / 7px 7px,
+        rgb(var(--line) / 0.92);
+}
+.ornament-tape--lg { width: 7.5rem; height: 1.8rem; }
+
+/* Sobekan kertas: strip bergerigi di tepi (default = tepi bawah bergerigi, menempel di atas) */
+:where(.ornament-torn) { z-index: 5; }
+.ornament-torn {
+    left: 0; right: 0; top: 0; height: 14px;
+    background: rgb(var(--line));
+    clip-path: polygon(0 0, 100% 0, 100% 55%, 97% 80%, 94% 50%, 90% 90%, 86% 55%, 81% 85%, 77% 45%, 72% 80%,
+                       68% 55%, 63% 90%, 59% 50%, 54% 85%, 50% 55%, 45% 90%, 41% 50%, 36% 80%, 32% 55%,
+                       27% 90%, 23% 50%, 18% 85%, 14% 55%, 9% 80%, 5% 50%, 0 80%);
+}
+.ornament-torn--top { top: 0; bottom: auto; }
+.ornament-torn--bottom { top: auto; bottom: 0; transform: scaleY(-1); }
+.ornament-torn--surface { background: rgb(var(--surface)); }
+
+/* ---- 3. KOMIK DOTS / HALFTONE ---- */
+.ornament-halftone {
+    z-index: -1;
+    width: min(18rem, 70%); height: min(14rem, 70%);
+    background-image: radial-gradient(rgb(var(--orn-dot) / var(--orn-dot-a)) 28%, transparent 31%);
+    background-size: 9px 9px;
+    -webkit-mask-image: radial-gradient(circle at var(--hx, 0%) var(--hy, 0%), #000 0, transparent 72%);
+    mask-image: radial-gradient(circle at var(--hx, 0%) var(--hy, 0%), #000 0, transparent 72%);
+}
+.ornament-halftone--tl { top: 0; left: 0; --hx: 0%; --hy: 0%; }
+.ornament-halftone--tr { top: 0; right: 0; --hx: 100%; --hy: 0%; }
+.ornament-halftone--bl { bottom: 0; left: 0; --hx: 0%; --hy: 100%; }
+.ornament-halftone--br { bottom: 0; right: 0; --hx: 100%; --hy: 100%; }
+.ornament-halftone--sm { width: 8rem; height: 8rem; }
+.ornament-halftone--big { background-size: 14px 14px; }
+.ornament-halftone--cotton { --orn-dot: 237 235 221; --orn-dot-a: 0.16; }
+.ornament-halftone.ornament-front { z-index: 2; }       /* di atas foto */
+
+/* Sinar matahari (sunburst rays) di belakang hero */
+.ornament-rays {
+    z-index: -1; --rx: 75%; --ry: 30%;
+    background: repeating-conic-gradient(from 0deg at var(--rx) var(--ry),
+        rgb(var(--orn-ghost) / 0.20) 0 6deg, transparent 6deg 12deg);
+    -webkit-mask-image: radial-gradient(circle at var(--rx) var(--ry), #000 0, transparent 70%);
+    mask-image: radial-gradient(circle at var(--rx) var(--ry), #000 0, transparent 70%);
+}
+.ornament-rays--cotton {
+    background: repeating-conic-gradient(from 0deg at var(--rx) var(--ry),
+        rgb(var(--line) / 0.08) 0 6deg, transparent 6deg 12deg);
+}
+
+/* ---- 4. GARIS AKSEN: zigzag & strip diagonal ---- */
+.ornament-zigzag {
+    height: 14px; width: 100%;
+    background: url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='28' height='14' viewBox='0 0 28 14'><polyline points='0,11 7,3 14,11 21,3 28,11' fill='none' stroke='%23edebdd' stroke-width='3.5'/></svg>") repeat-x center / 28px 14px;
+}
+.ornament-zigzag--noir {
+    background-image: url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='28' height='14' viewBox='0 0 28 14'><polyline points='0,11 7,3 14,11 21,3 28,11' fill='none' stroke='%231b1717' stroke-width='3.5'/></svg>");
+}
+.ornament-stripes {
+    height: 12px;
+    background: repeating-linear-gradient(-45deg, #1b1717 0 10px, #edebdd 10px 20px);
+}
+
+/* ---- 5. STEMPEL / LABEL ---- */
+:where(.stamp-badge) { z-index: 10; }
+.stamp-badge {
+    position: absolute; white-space: nowrap;
+    border: 3px solid rgb(var(--hl)); outline: 2px solid rgb(var(--hl)); outline-offset: 2px;
+    color: rgb(var(--hl)); background: rgb(27 23 23 / 0.55);
+    font-family: 'Alfa Slab One', serif; text-transform: uppercase;
+    letter-spacing: 0.14em; font-size: 0.7rem; line-height: 1;
+    padding: 0.3rem 0.6rem; opacity: 0.95;
+}
+.stamp-badge--solid { background: rgb(var(--coral)); color: #1b1717; border-color: #1b1717; outline-color: #1b1717; }
+.stamp-badge--red { background: #810100; color: #edebdd; border-color: #edebdd; outline-color: #edebdd; }
+.stamp-badge--sm { font-size: 0.55rem; padding: 0.2rem 0.45rem; border-width: 2px; outline-width: 1px; }
+.stamp-badge--faint { opacity: 0.4; }
+
+:where(.stamp-round) { z-index: 10; }
+.stamp-round { position: absolute; width: var(--s, 7rem); height: var(--s, 7rem); color: rgb(var(--hl)); }
+.stamp-round svg { display: block; width: 100%; height: 100%; overflow: visible; }
+.stamp-round text { font-family: 'Alfa Slab One', serif; fill: currentColor; text-transform: uppercase; }
+.stamp-round--faint { opacity: 0.35; }
+
+/* ==========================================
+   ACCESSIBILITY
+   ========================================== */
+@media (prefers-reduced-motion: reduce) {
+    .vinyl-spin, .marquee-track, .music-pulse, .np-eq i { animation: none; }
+    .tt-arm { transition: none; }
+}
